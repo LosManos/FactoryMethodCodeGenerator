@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "SourceGenerator": {
+      "commandName": "Project",
+      "environmentVariables": {
+
+      }
+    },
+    "Generators": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../ConsoleApp1/ConsoleApp1.csproj"
+    }
+  }
+}
