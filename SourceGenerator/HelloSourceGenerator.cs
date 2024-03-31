@@ -1,5 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MyInterface;
 
 namespace SourceGenerator;
 
@@ -27,12 +29,32 @@ public class HelloSourceGenerator : ISourceGenerator
         //         .SelectMany(attr => attr.Attributes
         //             .Where(a => a.Name.ToString() == "Dto")));
 
-        var interesting = typeDeclarationSyntaxes
-            // .Where(td => td is RecordDeclarationSyntax)
-            // .Where(rd => rd.AttributeLists.Count >= 1)
-            // .Select(rd =>( rd.Identifier.ToString(), rd.AttributeLists.First().Attributes.First().Name));
-            .SelectMany(rd => rd.AttributeLists.SelectMany( al =>
-                al.Attributes.Select(a => ("rd", a.Name))));
+        // var interesting = typeDeclarationSyntaxes
+        //     // .Where(td => td is RecordDeclarationSyntax)
+        //     // .Where(rd => rd.AttributeLists.Count >= 1)
+        //     // .Select(rd =>( rd.Identifier.ToString(), rd.AttributeLists.First().Attributes.First().Name));
+        //     .SelectMany(rd => rd.AttributeLists.SelectMany( al =>
+        //         al.Attributes.Where(a => a is DtoAttribute)
+        //             .Select(a => ("rd", a.Name))));
+
+        var interesting = context.Compilation.SyntaxTrees
+            .SelectMany(st => st
+                .GetRoot()
+                .DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .Where(r => r.AttributeLists
+                    .SelectMany(al => al.Attributes)
+                    // It would be better to get to the very type of DtoAttribute
+                    // but right no I cannot get a dependency of project type to work
+                    // even though looking at
+                    // https://github.com/dotnet/roslyn/discussions/47517
+                    // and similar, like the Kathleen Dollard code that uses
+                    // <TargetPathWithTargetPlatformMoniker Include="$(OutputPath)MyInterface.dll" IncludeRuntimeDependency="false" />
+                    // in a nice way.
+                    // So until I get MyInterface/DtoAttribute into a nuget package
+                    // i use the name. Unfortunately.
+                    .Any(a => a.Name.GetText().ToString() == "Dto")));
+            // .ToList();
 
         var classNames = typeDeclarationSyntaxes.Select(cd => cd.Identifier.Text);
         string classNamesString = string.Join(",", classNames);

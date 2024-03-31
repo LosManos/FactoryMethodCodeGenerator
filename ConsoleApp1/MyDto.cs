@@ -1,3 +1,5 @@
+using MyInterface;
+
 namespace ConsoleApp1;
 
 [Dto]

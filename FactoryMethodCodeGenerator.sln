@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGenerator", "SourceGenerator\SourceGenerator.csproj", "{F303D27C-9E77-41BE-8F11-7988F1E25650}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyInterface", "MyInterface\MyInterface.csproj", "{AADA30A6-8ECD-470B-A054-C9FADE357FF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{F303D27C-9E77-41BE-8F11-7988F1E25650}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F303D27C-9E77-41BE-8F11-7988F1E25650}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F303D27C-9E77-41BE-8F11-7988F1E25650}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
