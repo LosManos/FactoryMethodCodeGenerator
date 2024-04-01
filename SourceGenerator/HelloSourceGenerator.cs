@@ -23,18 +23,14 @@ public class HelloSourceGenerator : ISourceGenerator
 
         foreach (var classDeclaration in classCollector.Types)
         {
-            var classAndAttributes = (
-                @class: classDeclaration,
-                ass: classDeclaration.AttributeLists.SelectMany(al => al.Attributes),
-                has: classDeclaration.AttributeLists.SelectMany(al => al.Attributes)
-                    .Any(a => a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute")
-            );
+            var has = classDeclaration.attribs.Any(a =>
+                a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute");
 
-            var outputItem = $"{{{
-                classAndAttributes.@class.GetDeclaredSymbol(compilation).ToString()},{
-                    classAndAttributes.@class.GetType().Name},{
-                        classAndAttributes.ass.Select(a => a.Name.ToString()).StringJoin()},{
-                            classAndAttributes.has}}}";
+            var outputItem = $"{{{classDeclaration.isOfType}:{
+                classDeclaration.type.GetDeclaredSymbol(compilation)},{
+                classDeclaration.type.GetType().Name},{
+                classDeclaration.attribs.Select(a => a.Name.ToString()).StringJoin()},{
+                has}}}";
             output.Add(outputItem);
         }
 
@@ -66,17 +62,22 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
     public class ClassCollector : ISyntaxReceiver
     {
+        public enum IsOfType{
+            IsClass = 1,
+            IsRecord,
+        }
+
         // Classes and Records
-        public List<TypeDeclarationSyntax> Types { get; } = new();
+        public List<(IsOfType isOfType, TypeDeclarationSyntax @type, IEnumerable<AttributeSyntax> attribs)> Types { get; } = new();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is ClassDeclarationSyntax classDeclaration)
             {
-                Types.Add(classDeclaration);
+                Types.Add((IsOfType.IsClass, classDeclaration, classDeclaration.AttributeLists.SelectMany(a=>a.Attributes)));
             } else if (syntaxNode is RecordDeclarationSyntax recordDeclarationSyntax)
             {
-                Types.Add(recordDeclarationSyntax);
+                Types.Add((IsOfType.IsRecord, recordDeclarationSyntax, recordDeclarationSyntax.AttributeLists.SelectMany(a => a.Attributes)));
             }
         }
     }
