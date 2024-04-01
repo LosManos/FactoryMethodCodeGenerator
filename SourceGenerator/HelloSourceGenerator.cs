@@ -44,7 +44,7 @@ public class HelloSourceGenerator : ISourceGenerator
         var typeName = mainMethod.ContainingType.Name;
         context.AddSource($"{typeName}.g.cs", consoleSource);
 
-        var dtoSource = sourceBuilder.Build("MyGeneratedNamespace", output);
+        var dtoSource = sourceBuilder.Build("MyGeneratedNamespace", output, typeCollector.Types);
         // Add the source code to the compilation
         context.AddSource($"MyDtos.g.cs", dtoSource);
     }
