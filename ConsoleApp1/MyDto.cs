@@ -3,10 +3,10 @@ using MyInterface;
 namespace ConsoleApp1;
 
 [Dto]
-public record MyRecordDto(string name);
+public partial record MyRecordDto(string name);
 
 [Dto]
-public class MyClassDto(string name);
+public partial class MyClassDto(string name);
 
 public record NotARecordDto();
 
