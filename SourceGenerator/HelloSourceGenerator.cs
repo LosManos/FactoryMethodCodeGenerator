@@ -17,11 +17,10 @@ public class HelloSourceGenerator : ISourceGenerator
     {
         var classCollector = (ClassCollector)context.SyntaxReceiver;
         var compilation = context.Compilation;
-        var model = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
+        // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
 
-        var classesImplementingInterface = new List<ClassDeclarationSyntax>();
-
-        var xxx = new List<string>();
+        var output = new List<string>();
+        var errors = new List<string>();
 
         foreach (var classDeclaration in classCollector.Classes)
         {
@@ -34,16 +33,32 @@ public class HelloSourceGenerator : ISourceGenerator
                         .Any(a => a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute")
                 );
 
-                var xx = $"{{{
+                var outputItem = $"{{{
                     classAndAttributes.@class.GetDeclaredSymbol(compilation).ToString()},{
                     classAndAttributes.ass.Select(a => a.Name.ToString()).StringJoin()},{
                     classAndAttributes.has}}}";
-                xxx.Add(xx);
+                output.Add(outputItem);
             }
             catch (ArgumentException exc) when (exc.Message == "Syntax node is not within syntax tree")
             {
                 // Due to, for me, unknown reason, it fails. Like for Program.
+                errors.Add(exc.Message);
             }
+        }
+
+        foreach (var recordDeclaration in classCollector.Records)
+        {
+            var recordAndAttributes = (
+                @record: recordDeclaration,
+                ass: recordDeclaration.AttributeLists.SelectMany(al => al.Attributes),
+                has: recordDeclaration.AttributeLists.SelectMany(al => al.Attributes)
+                    .Any(a => a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute")
+            );
+
+            var outputItem = $"{recordAndAttributes.record.GetDeclaredSymbol(compilation)}," +
+                             $"{recordAndAttributes.ass.Select(a => a.Name.ToString()).StringJoin()}";
+
+            output.Add(outputItem);
         }
 
         // Find the main method
@@ -55,7 +70,10 @@ public class HelloSourceGenerator : ISourceGenerator
 using System;
 
 // classes:
-// {xxx.StringJoinNL()}
+// {output.StringJoinNL()}
+
+// errors:
+// {errors.StringJoinNL()}
 
 namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 {{
@@ -75,12 +93,16 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
     public class ClassCollector : ISyntaxReceiver
     {
         public List<ClassDeclarationSyntax> Classes { get; } = new List<ClassDeclarationSyntax>();
+        public List<RecordDeclarationSyntax> Records { get; } = new List<RecordDeclarationSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is ClassDeclarationSyntax classDeclaration)
             {
                 Classes.Add(classDeclaration);
+            } else if (syntaxNode is RecordDeclarationSyntax recordDeclarationSyntax)
+            {
+                Records.Add(recordDeclarationSyntax);
             }
         }
     }
