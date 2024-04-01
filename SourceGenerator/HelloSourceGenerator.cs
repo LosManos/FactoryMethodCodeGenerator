@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SourceGenerator;
@@ -67,16 +68,20 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         }
 
         // Classes and Records
-        public List<(IsOfType isOfType, TypeDeclarationSyntax @type, IEnumerable<AttributeSyntax> attribs)> Types { get; } = new();
+        public IImmutableList<(IsOfType isOfType, TypeDeclarationSyntax @type, IEnumerable<AttributeSyntax>
+            attribs)> Types =>
+            _types.ToImmutableList();
+
+        private List<(IsOfType isOfType, TypeDeclarationSyntax @type, IEnumerable<AttributeSyntax> attribs)> _types { get; } = new();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is ClassDeclarationSyntax classDeclaration)
             {
-                Types.Add((IsOfType.IsClass, classDeclaration, classDeclaration.AttributeLists.SelectMany(a=>a.Attributes)));
+                _types.Add((IsOfType.IsClass, classDeclaration, classDeclaration.AttributeLists.SelectMany(a=>a.Attributes)));
             } else if (syntaxNode is RecordDeclarationSyntax recordDeclarationSyntax)
             {
-                Types.Add((IsOfType.IsRecord, recordDeclarationSyntax, recordDeclarationSyntax.AttributeLists.SelectMany(a => a.Attributes)));
+                _types.Add((IsOfType.IsRecord, recordDeclarationSyntax, recordDeclarationSyntax.AttributeLists.SelectMany(a => a.Attributes)));
             }
         }
     }
