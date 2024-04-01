@@ -1,7 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using MyInterface;
 
 namespace SourceGenerator;
 
@@ -10,18 +8,18 @@ public class HelloSourceGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new ClassCollector());
+        context.RegisterForSyntaxNotifications(() => new TypeCollector());
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
-        var classCollector = (ClassCollector)context.SyntaxReceiver;
+        var typeCollector = (TypeCollector)context.SyntaxReceiver;
         var compilation = context.Compilation;
         // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
 
         var output = new List<string>();
 
-        foreach (var classDeclaration in classCollector.Types)
+        foreach (var classDeclaration in typeCollector.Types)
         {
             var has = classDeclaration.attribs.Any(a =>
                 a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute");
@@ -60,7 +58,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         context.AddSource($"{typeName}.g.cs", source);
     }
 
-    public class ClassCollector : ISyntaxReceiver
+    public class TypeCollector : ISyntaxReceiver
     {
         public enum IsOfType{
             IsClass = 1,
