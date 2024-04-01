@@ -13,7 +13,7 @@ public class HelloSourceGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-        var typeCollector = (TypeCollector)context.SyntaxReceiver;
+        var typeCollector = (TypeCollector)context.SyntaxReceiver!;
         var compilation = context.Compilation;
         // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
 
