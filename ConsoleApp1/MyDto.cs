@@ -5,7 +5,8 @@ namespace ConsoleApp1;
 [Dto]
 public partial record MyRecordDto
 {
-    public string MyValue { get; set; }
+    public string MyFirstValue { get; set; }
+    public string MySecondValue { get; set; }
 }
 
 [Dto]

@@ -65,19 +65,14 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
             var allProperties = properties.Select(m => m.ToString());
             var propertyDescription = string.Join(",", allProperties);
 
-            var constructorDeclaration = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(name))
-                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                .WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList<ParameterSyntax>(
+            var theProperties = properties.Select(p => new
+            {
+                Name = p.Identifier.Text,
+                Text = p.ToString(),
+            });
 
-                    SyntaxFactory.Parameter(SyntaxFactory.Identifier(properties.Single().Identifier.Text))
 
-                .WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword))))))
-                .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
-                    SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                        SyntaxKind.SimpleAssignmentExpression,
-
-                        SyntaxFactory.IdentifierName("this." + properties.Single().Identifier.Text),
-                        SyntaxFactory.IdentifierName(properties.Single().Identifier.Text))))));
+            var constructor = CreateConstructor(name, properties);
 
             var res = SyntaxFactory.RecordDeclaration(
                     SyntaxKind.RecordDeclaration,
@@ -91,7 +86,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
                     SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, $"// Properties: {propertyDescription}")))
                 .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                 .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
-                .AddMembers(constructorDeclaration)
+                .AddMembers(constructor)
                 ;
 
             // foreach (var member in members)
@@ -141,6 +136,37 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 ";
 
         return source;
+    }
+
+    private static ConstructorDeclarationSyntax CreateConstructor(
+        string name,
+        IEnumerable<PropertyDeclarationSyntax> properties)
+    {
+        var propertyOne = properties.First();
+
+        var parameterList = SyntaxFactory.ParameterList();
+        foreach (var property in properties)
+        {
+            parameterList = parameterList.AddParameters(CreateParameter(property));
+        }
+
+        var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(name))
+            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+            .WithParameterList(parameterList)
+            .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
+                SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                    SyntaxKind.SimpleAssignmentExpression,
+
+                    SyntaxFactory.IdentifierName("this." + propertyOne.Identifier.Text),
+                    SyntaxFactory.IdentifierName(propertyOne.Identifier.Text))))));
+        return ret;
+    }
+
+    private static ParameterSyntax CreateParameter(PropertyDeclarationSyntax propertySyntax)
+    {
+        return SyntaxFactory.Parameter(SyntaxFactory.Identifier(propertySyntax.Identifier.Text))
+            .WithType(SyntaxFactory.PredefinedType(
+                SyntaxFactory.Token(SyntaxKind.StringKeyword)));
     }
 
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarchy/
