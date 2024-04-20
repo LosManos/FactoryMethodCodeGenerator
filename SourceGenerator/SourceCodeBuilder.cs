@@ -144,21 +144,26 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
     {
         var propertyOne = properties.First();
 
-        var parameterList = SyntaxFactory.ParameterList();
+        var parameters = SyntaxFactory.ParameterList();
         foreach (var property in properties)
         {
-            parameterList = parameterList.AddParameters(CreateParameter(property));
+            parameters = parameters.AddParameters(CreateParameter(property));
+        }
+
+        List<StatementSyntax> statements = [];
+        foreach (var property in properties)
+        {
+            statements.Add(
+                SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                    SyntaxKind.SimpleAssignmentExpression,
+                    SyntaxFactory.IdentifierName("this." + property.Identifier.Text),
+                    SyntaxFactory.IdentifierName(property.Identifier.Text))));
         }
 
         var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(name))
             .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-            .WithParameterList(parameterList)
-            .WithBody(SyntaxFactory.Block(SyntaxFactory.SingletonList<StatementSyntax>(
-                SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                    SyntaxKind.SimpleAssignmentExpression,
-
-                    SyntaxFactory.IdentifierName("this." + propertyOne.Identifier.Text),
-                    SyntaxFactory.IdentifierName(propertyOne.Identifier.Text))))));
+            .WithParameterList(parameters)
+            .WithBody(SyntaxFactory.Block(statements));
         return ret;
     }
 
