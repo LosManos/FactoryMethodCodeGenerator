@@ -142,8 +142,6 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         string name,
         IEnumerable<PropertyDeclarationSyntax> properties)
     {
-        var propertyOne = properties.First();
-
         var parameters = SyntaxFactory.ParameterList();
         foreach (var property in properties)
         {
@@ -169,9 +167,16 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
     private static ParameterSyntax CreateParameter(PropertyDeclarationSyntax propertySyntax)
     {
+        // This contstruct does not work for other than int or stirng.
+        var type = propertySyntax.Type.ToString() switch
+        {
+            "string" => SyntaxKind.StringKeyword,
+            "int"=> SyntaxKind.IntKeyword,
+            _ => throw new Exception($"Does not recognise the type {propertySyntax.Type.ToString()} of {propertySyntax.Identifier}."),
+        };
         return SyntaxFactory.Parameter(SyntaxFactory.Identifier(propertySyntax.Identifier.Text))
             .WithType(SyntaxFactory.PredefinedType(
-                SyntaxFactory.Token(SyntaxKind.StringKeyword)));
+                SyntaxFactory.Token(type)));
     }
 
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarchy/
