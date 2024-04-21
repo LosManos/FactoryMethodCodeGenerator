@@ -7,6 +7,7 @@ public partial record MyRecordDto
 {
     public int MyFirstValue { get; set; }
     public string MySecondValue { get; set; }
+    public float MyThirdValue { get; set; }
 }
 
 [Dto]
