@@ -59,25 +59,22 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
             .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
             .WithBody(SyntaxFactory.Block());
 
-        RecordDeclarationSyntax CreateRecord(string name, IEnumerable<PropertyDeclarationSyntax> properties)
+        RecordDeclarationSyntax CreateRecord(RecordInfo recordInfo)
         {
-            // Get parameters.
-            var propertyDescriptionString = string.Join(",", properties.Select(m => m.ToString()));
+            var propertiesAsString = string.Join(",", recordInfo.Properties.Select(p => p.Text));
 
-            var propertyInfos = properties.Select(PropertyInfo.Create);
-
-            var constructorInfo = ConstructorInfo.Create(name, propertyInfos);
+            var constructorInfo = ConstructorInfo.Create(recordInfo.Name, recordInfo.Properties);
 
             var constructor = CreateConstructor(constructorInfo);
 
             var res = SyntaxFactory.RecordDeclaration(
                     SyntaxKind.RecordDeclaration,
                     SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                    SyntaxFactory.Identifier(name))
+                    SyntaxFactory.Identifier(recordInfo.Name))
                 .WithModifiers(SyntaxTokenList.Create(
                     SyntaxFactory.Token(SyntaxKind.PartialKeyword)
                 ))
-                .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertyDescriptionString}"))
+                .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertiesAsString}"))
                 .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                 .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
                 .AddMembers(constructor);
@@ -107,7 +104,11 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
             var members = type.Members.Select(m => m as PropertyDeclarationSyntax).Where(m => m is not null);
 
             var recordName = type.GetDeclaredSymbol(compilation)?.Name;
-            ns = ns.AddMembers(CreateRecord(recordName, members));
+
+            var recordInfo = RecordInfo.Create(recordName,
+                members.Select(PropertyInfo.Create));
+
+            ns = ns.AddMembers(CreateRecord(recordInfo));
         }
 
         string source = $@"{autoComment} 
