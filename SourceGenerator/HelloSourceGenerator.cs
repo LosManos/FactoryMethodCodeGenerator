@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Specialized;
+using Microsoft.CodeAnalysis;
 
 namespace SourceGenerator;
 
@@ -46,10 +47,9 @@ public class HelloSourceGenerator : ISourceGenerator
 
         var dtoSource = sourceBuilder.Build(compilation, typeCollector.TypesWithAttribute("Dto", "DtoAttribute"));
         // Add the source code to the compilation
-        var counter = 1;
         foreach (var source in dtoSource)
         {
-            context.AddSource($"MyDtos{counter++}.g.cs", source);
+            context.AddSource($"MyDtos.{source.identifier}.g.cs", source.source);
         }
     }
 }
