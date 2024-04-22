@@ -38,7 +38,7 @@ public class HelloSourceGenerator : ISourceGenerator
         // Add the source codes to the compilation.
         foreach (var source in dtoSources)
         {
-            context.AddSource($"MyDtos.{source.identifier}.g.cs", source.source);
+            context.AddSource($"{source.namespaceName}.{source.classOrRecordName}.g.cs", source.source);
         }
     }
 }
