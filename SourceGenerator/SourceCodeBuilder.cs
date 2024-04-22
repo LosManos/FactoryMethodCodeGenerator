@@ -12,7 +12,7 @@ internal class SourceCodeBuilder(){
         IImmutableList<(TypeCollector.IsOfType isOfType, TypeDeclarationSyntax type, IEnumerable<AttributeSyntax>
             attribs)> types)
     {
-        foreach (var type in types)
+        foreach (var type  in types)
         {
             yield return Build(compilation, type.isOfType, type.type, type.attribs);
         }
@@ -27,6 +27,7 @@ internal class SourceCodeBuilder(){
         // Which model is this?
         // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.Skip(0).First());
 
+        var usePrivateConstructor = GetUsePrivateConstructor(type.AttributeLists);
         var namespaceName = GetNamespaceName(type);
         var ns = CreateNamespace(namespaceName);
 
@@ -37,16 +38,14 @@ internal class SourceCodeBuilder(){
 
         if (isOfType == TypeCollector.IsOfType.IsClass)
         {
-            var recordInfo = RecordOrClassInfo.Create(classRecordName,
-                members.Select(PropertyInfo.Create));
+            var recordInfo = RecordOrClassInfo.Create(classRecordName, members.Select(PropertyInfo.Create), usePrivateConstructor);
 
             ns = ns.AddMembers(CreateClass(recordInfo));
         }
 
         if (isOfType == TypeCollector.IsOfType.IsRecord)
         {
-            var recordInfo = RecordOrClassInfo.Create(classRecordName,
-                members.Select(PropertyInfo.Create));
+            var recordInfo = RecordOrClassInfo.Create(classRecordName, members.Select(PropertyInfo.Create), usePrivateConstructor);
 
             ns = ns.AddMembers(CreateRecord(recordInfo));
         }
@@ -79,7 +78,7 @@ internal class SourceCodeBuilder(){
 
     private ClassDeclarationSyntax CreateClass(RecordOrClassInfo recordOrClassInfo)
     {
-        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties);
+        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
         var constructor = CreateConstructor(constructorInfo);
 
         var factoryMethod = CreateFactoryMethod(constructorInfo);
@@ -97,7 +96,9 @@ internal class SourceCodeBuilder(){
     /// <returns></returns>
     private static ConstructorDeclarationSyntax CreateConstructor(ConstructorInfo constructorInfo)
     {
-        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(constructorInfo.IsPrivateConstructor
+            ? SyntaxKind.PrivateKeyword
+            : SyntaxKind.PublicKeyword));
 
         var parameters = CreateParameterList(constructorInfo.Properties);
 
@@ -167,7 +168,7 @@ internal class SourceCodeBuilder(){
     {
         var propertiesAsString = string.Join(",", recordOrClassInfo.Properties.Select(p => p.Text));
 
-        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties);
+        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
 
         var constructor = CreateConstructor(constructorInfo);
 
@@ -237,5 +238,35 @@ internal class SourceCodeBuilder(){
 
         // return the final namespace
         return nameSpace;
+    }
+
+    /// <summary>Get the flag UsePrivateConstructor from DtoAttribute.
+    /// Ugly code; yes I know.
+    /// </summary>
+    private static bool GetUsePrivateConstructor(SyntaxList<AttributeListSyntax> attribList)
+    {
+        // The name of the argument to the attribute.
+        // Please find a way to get the name from the Attribute itself.
+        const string usePrivateConstructorFieldName = "UsePrivateConstructor";
+
+        var attribute = attribList.SelectMany(x =>
+                x.Attributes.Where(y => y.Name.ToString() == "Dto" || y.Name.ToString() == "DtoAttribute"))
+            .Single();
+
+        var usePrivateConstructorArgument =
+            attribute.ArgumentList?.Arguments.FirstOrDefault(a =>
+                a?.NameEquals?.Name.ToString() == usePrivateConstructorFieldName);
+
+        if (usePrivateConstructorArgument is null)
+        {
+            return true;
+        }
+
+        // Get the argument value (i.e. the parameter) and try to get the value out of it.
+        // If we cannot - return default value (true).
+        var valueAsString = usePrivateConstructorArgument.Expression.NormalizeWhitespace().ToString();
+        return bool.TryParse(valueAsString, out var usePrivateConstructorValue)
+            ? usePrivateConstructorValue
+            : true;
     }
 }
