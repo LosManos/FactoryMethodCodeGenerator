@@ -62,15 +62,32 @@ internal class SourceCodeBuilder(){
         return (source, namespaceName, classRecordName);
     }
 
+    private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
+    {
+        return SyntaxFactory.Argument(SyntaxFactory.IdentifierName(propertyInfo.Name));
+    }
+
+    private static ArgumentListSyntax? CreateArgumentList(IEnumerable<PropertyInfo> propertyInfos)
+    {
+        var arguments = SyntaxFactory.ArgumentList();
+        foreach (var propertyInfo in propertyInfos)
+        {
+            arguments = arguments.AddArguments(CreateArgument(propertyInfo));
+        }
+        return arguments;
+    }
+
     private ClassDeclarationSyntax CreateClass(RecordOrClassInfo recordOrClassInfo)
     {
         var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties);
         var constructor = CreateConstructor(constructorInfo);
 
+        var factoryMethod = CreateFactoryMethod(constructorInfo);
+
         return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(recordOrClassInfo.Name))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
-            .AddMembers(constructor);
+            .AddMembers(constructor, factoryMethod);
     }
 
     /// <summary>Create a constructor taking a list of parameters
@@ -93,6 +110,30 @@ internal class SourceCodeBuilder(){
         ));
 
         var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(constructorInfo.Name))
+            .WithModifiers(modifiers)
+            .WithParameterList(parameters)
+            .WithBody(body);
+        return ret;
+    }
+
+    private static MethodDeclarationSyntax CreateFactoryMethod(ConstructorInfo constructorInfo)
+    {
+        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+        var parameters = CreateParameterList(constructorInfo.Properties);
+        var arguments = CreateArgumentList(constructorInfo.Properties);
+
+        var body = SyntaxFactory.Block(
+            // Return. E.g.: return new MyDto(a,b,c);
+            SyntaxFactory.ReturnStatement(
+                SyntaxFactory.ObjectCreationExpression(
+                    SyntaxFactory.ParseTypeName(constructorInfo.Name)
+                ).WithArgumentList(arguments)
+            ));
+
+        var ret = SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.ParseTypeName(constructorInfo.Name),
+                "Create")
             .WithModifiers(modifiers)
             .WithParameterList(parameters)
             .WithBody(body);
@@ -128,6 +169,8 @@ internal class SourceCodeBuilder(){
 
         var constructor = CreateConstructor(constructorInfo);
 
+        var factoryMethod = CreateFactoryMethod(constructorInfo);
+
         var res = SyntaxFactory.RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
                 SyntaxFactory.Token(SyntaxKind.RecordKeyword),
@@ -138,7 +181,7 @@ internal class SourceCodeBuilder(){
             .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertiesAsString}"))
             .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
             .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
-            .AddMembers(constructor);
+            .AddMembers(constructor, factoryMethod);
         return res;
     }
 
