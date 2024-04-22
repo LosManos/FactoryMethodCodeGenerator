@@ -55,7 +55,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
         if (isOfType == TypeCollector.IsOfType.IsClass)
         {
-            var recordInfo = RecordInfo.Create(classRecordName,
+            var recordInfo = RecordOrClassInfo.Create(classRecordName,
                 members.Select(PropertyInfo.Create));
 
             ns = ns.AddMembers(CreateClass(recordInfo));
@@ -63,7 +63,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
         if (isOfType == TypeCollector.IsOfType.IsRecord)
         {
-            var recordInfo = RecordInfo.Create(classRecordName,
+            var recordInfo = RecordOrClassInfo.Create(classRecordName,
                 members.Select(PropertyInfo.Create));
 
             ns = ns.AddMembers(CreateRecord(recordInfo));
@@ -80,12 +80,12 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return (source, classRecordName);
     }
 
-    private ClassDeclarationSyntax CreateClass(RecordInfo recordInfo)
+    private ClassDeclarationSyntax CreateClass(RecordOrClassInfo recordOrClassInfo)
     {
-        var constructorInfo = ConstructorInfo.Create(recordInfo.Name, recordInfo.Properties);
+        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties);
         var constructor = CreateConstructor(constructorInfo);
 
-        return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(recordInfo.Name))
+        return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(recordOrClassInfo.Name))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
             .AddMembers(constructor);
@@ -138,18 +138,18 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return parameters;
     }
 
-    private static RecordDeclarationSyntax CreateRecord(RecordInfo recordInfo)
+    private static RecordDeclarationSyntax CreateRecord(RecordOrClassInfo recordOrClassInfo)
     {
-        var propertiesAsString = string.Join(",", recordInfo.Properties.Select(p => p.Text));
+        var propertiesAsString = string.Join(",", recordOrClassInfo.Properties.Select(p => p.Text));
 
-        var constructorInfo = ConstructorInfo.Create(recordInfo.Name, recordInfo.Properties);
+        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties);
 
         var constructor = CreateConstructor(constructorInfo);
 
         var res = SyntaxFactory.RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
                 SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                SyntaxFactory.Identifier(recordInfo.Name))
+                SyntaxFactory.Identifier(recordOrClassInfo.Name))
             .WithModifiers(SyntaxTokenList.Create(
                 SyntaxFactory.Token(SyntaxKind.PartialKeyword)
             ))
