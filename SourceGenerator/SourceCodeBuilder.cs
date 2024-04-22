@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MyInterface;
 
 namespace SourceGenerator;
 
@@ -245,12 +246,13 @@ internal class SourceCodeBuilder(){
     /// </summary>
     private static bool GetUsePrivateConstructor(SyntaxList<AttributeListSyntax> attribList)
     {
-        // The name of the argument to the attribute.
-        // Please find a way to get the name from the Attribute itself.
-        const string usePrivateConstructorFieldName = "UsePrivateConstructor";
+        var attributeName = nameof(DtoAttribute); // DtoAttribute;
+        var attributeNames = new[] { attributeName, attributeName.Replace("Attribute", "") };
 
-        var attribute = attribList.SelectMany(x =>
-                x.Attributes.Where(y => y.Name.ToString() == "Dto" || y.Name.ToString() == "DtoAttribute"))
+        var usePrivateConstructorFieldName = nameof(DtoAttribute.UsePrivateConstructor);
+
+        var attribute = attribList.SelectMany(als =>
+                als.Attributes.Where(y => attributeNames.Contains(y.Name.ToString())))
             .Single();
 
         var usePrivateConstructorArgument =
