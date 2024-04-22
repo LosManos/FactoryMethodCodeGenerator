@@ -10,6 +10,11 @@ public partial record MyRecordDto
     public float MyThirdValue { get; init; }
 }
 
+public partial record MyRecordThatisNotIndlucedDto
+{
+    public int MyFirstValue { get; init; }
+}
+
 [Dto]
 public partial class MyClassDto
 {
