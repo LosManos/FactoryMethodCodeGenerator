@@ -51,15 +51,18 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         var classRecordName = type.GetDeclaredSymbol(compilation)?.Name
             ?? throw new Exception("The name of the class or record was unknow. It should not come here.");
 
+        var members = type.Members.Select(m => m as PropertyDeclarationSyntax).Where(m => m is not null);
+
         if (isOfType == TypeCollector.IsOfType.IsClass)
         {
-            ns = ns.AddMembers(CreateClass(classRecordName));
+            var recordInfo = RecordInfo.Create(classRecordName,
+                members.Select(PropertyInfo.Create));
+
+            ns = ns.AddMembers(CreateClass(recordInfo));
         }
 
         if (isOfType == TypeCollector.IsOfType.IsRecord)
         {
-            var members = type.Members.Select(m => m as PropertyDeclarationSyntax).Where(m => m is not null);
-
             var recordInfo = RecordInfo.Create(classRecordName,
                 members.Select(PropertyInfo.Create));
 
@@ -77,10 +80,16 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return (source, classRecordName);
     }
 
-    private ClassDeclarationSyntax CreateClass(string name) =>
-        SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(name))
+    private ClassDeclarationSyntax CreateClass(RecordInfo recordInfo)
+    {
+        var constructorInfo = ConstructorInfo.Create(recordInfo.Name, recordInfo.Properties);
+        var constructor = CreateConstructor(constructorInfo);
+
+        return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(recordInfo.Name))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+            .AddMembers(constructor);
+    }
 
     /// <summary>Create a constructor taking a list of parameters
     /// and updating properties of the same name.

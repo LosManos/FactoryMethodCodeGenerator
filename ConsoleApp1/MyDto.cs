@@ -11,7 +11,12 @@ public partial record MyRecordDto
 }
 
 [Dto]
-public partial class MyClassDto(string name);
+public partial class MyClassDto
+{
+    public int MyFirstValue { get; init; }
+    public string MySecondValue { get; init; }
+    public float MyThirdValue { get; init; }
+}
 
 public record NotARecordDto();
 
