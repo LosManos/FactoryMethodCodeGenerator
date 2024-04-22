@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 
 namespace SourceGenerator;
 
@@ -32,18 +31,14 @@ public class HelloSourceGenerator : ISourceGenerator
             output.Add(outputItem);
         }
 
-        // Find the main method
-        var mainMethod = context.Compilation.GetEntryPoint(context.CancellationToken)
-                         ?? throw new Exception("No main method found");
-
-        // Build up the source code
+        // Build the source.
         var sourceBuilder = new SourceCodeBuilder();
-
         var dtoSources = sourceBuilder.Build(compilation, typeCollector.TypesWithAttribute("Dto", "DtoAttribute"));
-        // Add the source code to the compilation
+
+        // Add the source codes to the compilation.
         foreach (var source in dtoSources)
         {
-            context.AddSource($"MyDtos.{source.identifier}.g.cs", source.source);
+            context.AddSource($"{source.namespaceName}.{source.classOrRecordName}.g.cs", source.source);
         }
     }
 }
