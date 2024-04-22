@@ -32,8 +32,8 @@ internal record PropertyInfo
 
 internal record ConstructorInfo
 {
-    public string Name { get; private set; }
-    public IEnumerable<PropertyInfo> Properties { get; private set; }
+    internal string Name { get; private set; }
+    internal IEnumerable<PropertyInfo> Properties { get; private set; }
 
     private ConstructorInfo(string name, IEnumerable<PropertyInfo> properties)
     {
@@ -49,8 +49,8 @@ internal record ConstructorInfo
 
 internal record RecordInfo
 {
-    public string Name { get; private set; }
-    public IEnumerable<PropertyInfo> Properties { get; private set; }
+    internal string Name { get; private set; }
+    internal IEnumerable<PropertyInfo> Properties { get; private set; }
 
     private RecordInfo(string name, IEnumerable<PropertyInfo> properties)
     {
@@ -58,8 +58,25 @@ internal record RecordInfo
         Properties = properties;
     }
 
-    public static RecordInfo Create(string name, IEnumerable<PropertyInfo> properties)
+    internal static RecordInfo Create(string name, IEnumerable<PropertyInfo> properties)
     {
         return new RecordInfo(name, properties);
     }
 }
+
+// internal record NamespaceInfo
+// {
+//     internal string Name { get; private set; }
+//     internal IEnumerable<RecordInfo> Records { get; private set; }
+//
+//     private NamespaceInfo(string name, IEnumerable<RecordInfo> records)
+//     {
+//         Name = name;
+//         Records = records;
+//     }
+//
+//     internal static NamespaceInfo Create(string name, IEnumerable<RecordInfo> records)
+//     {
+//         return new NamespaceInfo(name, records);
+//     }
+// }

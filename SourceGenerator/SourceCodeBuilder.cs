@@ -45,8 +45,8 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         // Which model is this?
         // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.Skip(0).First());
 
-        var nameSpaceName = GetNamespace(type);
-        var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpaceName)).NormalizeWhitespace();
+        var nameSpaceName = GetNamespaceName(type);
+        var ns = CreateNamespace(nameSpaceName);
 
         var classRecordName = type.GetDeclaredSymbol(compilation)?.Name
             ?? throw new Exception("The name of the class or record was unknow. It should not come here.");
@@ -58,8 +58,6 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
         if (isOfType == TypeCollector.IsOfType.IsRecord)
         {
-            var symbol = type.GetDeclaredSymbol(compilation);
-
             var members = type.Members.Select(m => m as PropertyDeclarationSyntax).Where(m => m is not null);
 
             var recordInfo = RecordInfo.Create(classRecordName,
@@ -110,6 +108,11 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return ret;
     }
 
+    private static NamespaceDeclarationSyntax CreateNamespace(string nameSpaceName)
+    {
+        return SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpaceName)).NormalizeWhitespace();
+    }
+
     private static ParameterSyntax CreateParameter(PropertyInfo propertyInfo)
     {
         return SyntaxFactory.Parameter(SyntaxFactory.Identifier(propertyInfo.Name))
@@ -156,7 +159,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarchy/
     // determine the namespace the class/enum/struct is declared in, if any
-    private static string GetNamespace(BaseTypeDeclarationSyntax syntax)
+    private static string GetNamespaceName(BaseTypeDeclarationSyntax syntax)
     {
         // If we don't have a namespace at all we'll return an empty string
         // This accounts for the "default namespace" case
