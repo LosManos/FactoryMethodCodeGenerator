@@ -38,7 +38,7 @@ public class HelloSourceGenerator : ISourceGenerator
         // Build up the source code
         var sourceBuilder = new SourceCodeBuilder();
 
-        var consoleSource = sourceBuilder.Build(output, mainMethod);
+        var consoleSource = sourceBuilder.Build(mainMethod);
 
         // Add the source code to the compilation
         var typeName = mainMethod.ContainingType.Name;
