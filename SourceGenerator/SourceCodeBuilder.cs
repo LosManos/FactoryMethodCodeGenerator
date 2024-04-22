@@ -127,23 +127,29 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return source;
     }
 
+    /// <summary>Create a constructor taking a list of parameters
+    /// and updating properties of the same name.
+    /// </summary>
+    /// <param name="constructorInfo"></param>
+    /// <returns></returns>
     private static ConstructorDeclarationSyntax CreateConstructor(ConstructorInfo constructorInfo)
     {
+        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
         var parameters = CreateParameterList(constructorInfo.Properties);
 
-        var statements = constructorInfo.Properties.Select(propertyInfo =>
+        var body = SyntaxFactory.Block(constructorInfo.Properties.Select(propertyInfo =>
             // Assignment. E.g.: this.MyProperty = MyProperty;
             SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
                 SyntaxKind.SimpleAssignmentExpression,
                 SyntaxFactory.IdentifierName("this." + propertyInfo.Name),
                 SyntaxFactory.IdentifierName(propertyInfo.Name)))
-        );
+        ));
 
-        // Create constructor with all parameters.
         var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(constructorInfo.Name))
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+            .WithModifiers(modifiers)
             .WithParameterList(parameters)
-            .WithBody(SyntaxFactory.Block(statements));
+            .WithBody(body);
         return ret;
     }
 
