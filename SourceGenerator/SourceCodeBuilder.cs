@@ -52,11 +52,6 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword));
 
-        var defaultConstructor = SyntaxFactory.ConstructorDeclaration(
-                "MyRecord")
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-            .WithBody(SyntaxFactory.Block());
-
         RecordDeclarationSyntax CreateRecord(RecordInfo recordInfo)
         {
             var propertiesAsString = string.Join(",", recordInfo.Properties.Select(p => p.Text));
