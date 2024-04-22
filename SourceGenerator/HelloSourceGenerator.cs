@@ -39,15 +39,9 @@ public class HelloSourceGenerator : ISourceGenerator
         // Build up the source code
         var sourceBuilder = new SourceCodeBuilder();
 
-        var consoleSource = sourceBuilder.Build(mainMethod);
-
+        var dtoSources = sourceBuilder.Build(compilation, typeCollector.TypesWithAttribute("Dto", "DtoAttribute"));
         // Add the source code to the compilation
-        var typeName = mainMethod.ContainingType.Name;
-        context.AddSource($"{typeName}.g.cs", consoleSource);
-
-        var dtoSource = sourceBuilder.Build(compilation, typeCollector.TypesWithAttribute("Dto", "DtoAttribute"));
-        // Add the source code to the compilation
-        foreach (var source in dtoSource)
+        foreach (var source in dtoSources)
         {
             context.AddSource($"MyDtos.{source.identifier}.g.cs", source.source);
         }
