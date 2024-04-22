@@ -39,7 +39,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         }
     }
 
-    internal string Build(
+    private string Build(
         Compilation compilation,
         IList<string> output,
         TypeCollector.IsOfType isOfType,
@@ -47,7 +47,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         IEnumerable<AttributeSyntax> attribs)
     {
         // Which model is this?
-        var model = compilation.GetSemanticModel(compilation.SyntaxTrees.Skip(0).First());
+        // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.Skip(0).First());
 
         ClassDeclarationSyntax CreateClass(string name) =>
             SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(name))
@@ -65,14 +65,10 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
             var allProperties = properties.Select(m => m.ToString());
             var propertyDescription = string.Join(",", allProperties);
 
-            var theProperties = properties.Select(p => new
-            {
-                Name = p.Identifier.Text,
-                Text = p.ToString(),
-            });
+            var propertyInfos = properties.Select(PropertyInfo.Create);
 
 
-            var constructor = CreateConstructor(name, properties);
+            var constructor = CreateConstructor(name, propertyInfos);
 
             var res = SyntaxFactory.RecordDeclaration(
                     SyntaxKind.RecordDeclaration,
@@ -86,15 +82,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
                     SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, $"// Properties: {propertyDescription}")))
                 .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                 .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
-                .AddMembers(constructor)
-                ;
-
-            // foreach (var member in members)
-            // {
-            //     res.WithLeadingTrivia(
-            //         SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, "// AB")));
-            // }
-
+                .AddMembers(constructor);
             return res;
         }
 
@@ -138,24 +126,19 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return source;
     }
 
-    private static ConstructorDeclarationSyntax CreateConstructor(
-        string name,
-        IEnumerable<PropertyDeclarationSyntax> properties)
+    private static ConstructorDeclarationSyntax CreateConstructor(string name, IEnumerable<PropertyInfo> propertyInfos)
     {
-        var parameters = SyntaxFactory.ParameterList();
-        foreach (var property in properties)
-        {
-            parameters = parameters.AddParameters(CreateParameter(property));
-        }
+        var parameters = CreateParameterList(propertyInfos);
 
         List<StatementSyntax> statements = [];
-        foreach (var property in properties)
+        foreach (var propertyInfo in propertyInfos)
         {
+            // Assignment. E.g.: this.MyProperty = MyProperty;
             statements.Add(
                 SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
                     SyntaxKind.SimpleAssignmentExpression,
-                    SyntaxFactory.IdentifierName("this." + property.Identifier.Text),
-                    SyntaxFactory.IdentifierName(property.Identifier.Text))));
+                    SyntaxFactory.IdentifierName("this." + propertyInfo.Name),
+                    SyntaxFactory.IdentifierName(propertyInfo.Name))));
         }
 
         var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(name))
@@ -165,10 +148,20 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return ret;
     }
 
-    private static ParameterSyntax CreateParameter(PropertyDeclarationSyntax propertySyntax)
+    private static ParameterListSyntax CreateParameterList(IEnumerable<PropertyInfo> propertyInfos)
     {
-        return SyntaxFactory.Parameter(SyntaxFactory.Identifier(propertySyntax.Identifier.Text))
-            .WithType(propertySyntax.Type);
+        var parameters = SyntaxFactory.ParameterList();
+        foreach (var propertyInfo in propertyInfos)
+        {
+            parameters = parameters.AddParameters(CreateParameter(propertyInfo));
+        }
+        return parameters;
+    }
+
+    private static ParameterSyntax CreateParameter(PropertyInfo propertyInfo)
+    {
+        return SyntaxFactory.Parameter(SyntaxFactory.Identifier(propertyInfo.Name))
+            .WithType(propertyInfo.Type);
     }
 
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarchy/
