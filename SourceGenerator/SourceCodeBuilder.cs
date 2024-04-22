@@ -118,7 +118,9 @@ internal class SourceCodeBuilder(){
 
     private static MethodDeclarationSyntax CreateFactoryMethod(ConstructorInfo constructorInfo)
     {
-        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+        var modifiers = SyntaxFactory.TokenList(
+            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+            SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
         var parameters = CreateParameterList(constructorInfo.Properties);
         var arguments = CreateArgumentList(constructorInfo.Properties);
