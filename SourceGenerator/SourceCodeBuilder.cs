@@ -62,8 +62,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         RecordDeclarationSyntax CreateRecord(string name, IEnumerable<PropertyDeclarationSyntax> properties)
         {
             // Get parameters.
-            var allProperties = properties.Select(m => m.ToString());
-            var propertyDescription = string.Join(",", allProperties);
+            var propertyDescriptionString = string.Join(",", properties.Select(m => m.ToString()));
 
             var propertyInfos = properties.Select(PropertyInfo.Create);
 
@@ -78,9 +77,7 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
                 .WithModifiers(SyntaxTokenList.Create(
                     SyntaxFactory.Token(SyntaxKind.PartialKeyword)
                 ))
-                // Write xml comment. https://stackoverflow.com/questions/30695752/how-do-i-add-an-xml-doc-comment-to-a-classdeclarationsyntax-in-roslyn
-                .WithLeadingTrivia(
-                    SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, $"// Properties: {propertyDescription}")))
+                .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertyDescriptionString}"))
                 .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                 .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
                 .AddMembers(constructor);
@@ -125,6 +122,12 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 ";
 
         return source;
+    }
+
+    private static SyntaxTriviaList CreateSingleLineComment(string comment)
+    {
+        // Future: Here is how to write xml comment. https://stackoverflow.com/questions/30695752/how-do-i-add-an-xml-doc-comment-to-a-classdeclarationsyntax-in-roslyn
+        return SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, "// "+ comment));
     }
 
     /// <summary>Create a constructor taking a list of parameters
