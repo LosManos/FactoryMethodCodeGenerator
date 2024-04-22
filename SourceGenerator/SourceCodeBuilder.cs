@@ -29,19 +29,17 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
     internal IEnumerable<string> Build(
         Compilation compilation,
-        IList<string> output,
         IImmutableList<(TypeCollector.IsOfType isOfType, TypeDeclarationSyntax type, IEnumerable<AttributeSyntax>
             attribs)> types)
     {
         foreach (var type in types)
         {
-            yield return Build(compilation, output, type.isOfType, type.type, type.attribs);
+            yield return Build(compilation, type.isOfType, type.type, type.attribs);
         }
     }
 
     private string Build(
         Compilation compilation,
-        IList<string> output,
         TypeCollector.IsOfType isOfType,
         TypeDeclarationSyntax type,
         IEnumerable<AttributeSyntax> attribs)
