@@ -67,8 +67,9 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
 
             var propertyInfos = properties.Select(PropertyInfo.Create);
 
+            var constructorInfo = ConstructorInfo.Create(name, propertyInfos);
 
-            var constructor = CreateConstructor(name, propertyInfos);
+            var constructor = CreateConstructor(constructorInfo);
 
             var res = SyntaxFactory.RecordDeclaration(
                     SyntaxKind.RecordDeclaration,
@@ -126,22 +127,20 @@ namespace {mainMethod.ContainingNamespace.ToDisplayString()}
         return source;
     }
 
-    private static ConstructorDeclarationSyntax CreateConstructor(string name, IEnumerable<PropertyInfo> propertyInfos)
+    private static ConstructorDeclarationSyntax CreateConstructor(ConstructorInfo constructorInfo)
     {
-        var parameters = CreateParameterList(propertyInfos);
+        var parameters = CreateParameterList(constructorInfo.Properties);
 
-        List<StatementSyntax> statements = [];
-        foreach (var propertyInfo in propertyInfos)
-        {
+        var statements = constructorInfo.Properties.Select(propertyInfo =>
             // Assignment. E.g.: this.MyProperty = MyProperty;
-            statements.Add(
-                SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                    SyntaxKind.SimpleAssignmentExpression,
-                    SyntaxFactory.IdentifierName("this." + propertyInfo.Name),
-                    SyntaxFactory.IdentifierName(propertyInfo.Name))));
-        }
+            SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxFactory.IdentifierName("this." + propertyInfo.Name),
+                SyntaxFactory.IdentifierName(propertyInfo.Name)))
+        );
 
-        var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(name))
+        // Create constructor with all parameters.
+        var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(constructorInfo.Name))
             .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
             .WithParameterList(parameters)
             .WithBody(SyntaxFactory.Block(statements));

@@ -25,3 +25,20 @@ internal record PropertyInfo
             property.Type);
     }
 }
+
+internal record ConstructorInfo
+{
+    public string Name { get; private set; }
+    public IEnumerable<PropertyInfo> Properties { get; private set; }
+
+    private ConstructorInfo(string name, IEnumerable<PropertyInfo> properties)
+    {
+        Name = name;
+        Properties = properties;
+    }
+
+    internal static ConstructorInfo Create(string name, IEnumerable<PropertyInfo> properties)
+    {
+        return new ConstructorInfo(name, properties);
+    }
+}
