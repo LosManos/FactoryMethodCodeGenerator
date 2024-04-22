@@ -31,7 +31,7 @@ internal class SourceCodeBuilder(){
         var ns = CreateNamespace(namespaceName);
 
         var classRecordName = type.GetDeclaredSymbol(compilation)?.Name
-            ?? throw new Exception("The name of the class or record was unknow. It should not come here.");
+            ?? throw new Exception("The name of the class or record was unknown. It should not come here.");
 
         var members = type.Members.Select(m => m as PropertyDeclarationSyntax).Where(m => m is not null);
 
