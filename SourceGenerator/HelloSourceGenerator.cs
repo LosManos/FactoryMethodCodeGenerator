@@ -14,22 +14,6 @@ public class HelloSourceGenerator : ISourceGenerator
     {
         var typeCollector = (TypeCollector)context.SyntaxReceiver!;
         var compilation = context.Compilation;
-        // var model = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
-
-        var output = new List<string>();
-
-        foreach (var classDeclaration in typeCollector.Types)
-        {
-            var has = classDeclaration.attribs.Any(a =>
-                a.Name.ToString() == "Dto" || a.Name.ToString() == "DtoAttribute");
-
-            var outputItem = $"{{{classDeclaration.isOfType}:{
-                classDeclaration.type.GetDeclaredSymbol(compilation)},{
-                    classDeclaration.type.GetType().Name},{
-                        classDeclaration.attribs.Select(a => a.Name.ToString()).StringJoin()},{
-                            has}}}";
-            output.Add(outputItem);
-        }
 
         // Build the source.
         var sourceBuilder = new SourceCodeBuilder();
