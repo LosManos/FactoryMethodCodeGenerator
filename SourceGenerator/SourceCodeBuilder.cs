@@ -191,8 +191,8 @@ internal class SourceCodeBuilder
     private static BaseNamespaceDeclarationSyntax GetNameSpace(TypeDeclarationSyntax syntax)
     {
         return syntax.Ancestors()
-            .OfType<FileScopedNamespaceDeclarationSyntax>()
-            .First(); // If we fail here we prolly don't have a file scoped namespace. Fix to read the other type.
+           .OfType<BaseNamespaceDeclarationSyntax>()
+           .First();
     }
 
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarch/
