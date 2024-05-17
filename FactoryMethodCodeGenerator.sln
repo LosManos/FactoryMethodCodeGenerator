@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGenerator", "SourceGe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyInterface", "MyInterface\MyInterface.csproj", "{AADA30A6-8ECD-470B-A054-C9FADE357FF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.ConsoleApp1", "Test.ConsoleApp1\Test.ConsoleApp1.csproj", "{1247C40E-873B-4CC0-B6A0-B1846E12A0DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AADA30A6-8ECD-470B-A054-C9FADE357FF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1247C40E-873B-4CC0-B6A0-B1846E12A0DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1247C40E-873B-4CC0-B6A0-B1846E12A0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1247C40E-873B-4CC0-B6A0-B1846E12A0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1247C40E-873B-4CC0-B6A0-B1846E12A0DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
