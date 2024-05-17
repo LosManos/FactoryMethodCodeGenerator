@@ -1,4 +1,6 @@
 using MyInterface;
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace ConsoleApp1;
 
@@ -11,13 +13,13 @@ public partial record MyRecordDto_With_DifferentTypes
 }
 
 [Dto]
-public partial record MyRecordDto_With_DefaultPrivateConstructor
+public partial record MyRecordDto_With_PrivateConstructor
 {
     public int MyFirstValue { get; init; }
 }
 
 [Dto(UsePrivateConstructor = false)]
-public partial record MyRecordDto_With_PublicPrivateConstructor
+public partial record MyRecordDto_With_PublicConstructor
 {
     public int MyFirstValue { get; init; }
 }
@@ -28,14 +30,4 @@ public partial record MyRecordDto_With_ExplicitPrivateConstructor
     public int MyFirstValue { get; init; }
 }
 
-[Dto]
-public partial class MyClassDto
-{
-    public int MyFirstValue { get; init; }
-    public string MySecondValue { get; init; }
-    public float MyThirdValue { get; init; }
-}
-
-public record NotARecordDto();
-
-public class NotAClassDto();
+public record NotARecordDto;
