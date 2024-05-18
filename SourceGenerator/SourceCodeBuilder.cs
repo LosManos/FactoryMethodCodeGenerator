@@ -55,6 +55,17 @@ internal class SourceCodeBuilder
         return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
     }
 
+    public (string source, string namespaceName, string recordName) BuildMapRecord(
+        SourceProductionContext spc,
+        RecordDeclarationSyntax syntax)
+    {
+        var @namespace = GetNameSpace(syntax);
+
+        var sourceCode = $"public record RemoveMe;";
+
+        return (sourceCode, @namespace.Name.ToString(), syntax.Identifier.ToString());
+    }
+
     private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
     {
         return SyntaxFactory.Argument(SyntaxFactory.IdentifierName(propertyInfo.Name));

@@ -15,22 +15,30 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         var classSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me.
+                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
                 predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 },
                 transform: (ctx, _) => (ClassDeclarationSyntax)ctx.Node)
             .Where(static m => m is not null);
 
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me.
+                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
                 predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
                 transform: (ctx, _) => (RecordDeclarationSyntax)ctx.Node)
             .Where(static m => m is not null);
+
+        var mapSyntaxProvider = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
+                transform: (ctx, _) => (RecordDeclarationSyntax)ctx.Node)
+            .Where(static rds => rds is not null && rds.AttributeLists.HasMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteClass(spc, syntax));
         context.RegisterSourceOutput(recordSyntaxProvider,
             static (spc, syntax) => ExecuteRecord(spc, syntax));
+        context.RegisterSourceOutput(mapSyntaxProvider,
+            static (spc, syntax) => ExecuteMapRecord(spc, syntax));
     }
 
     static void ExecuteClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
@@ -40,6 +48,18 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
         var sourceBuilder = new SourceCodeBuilder();
         var dtoSources = sourceBuilder.BuildClass(spc, syntax);
+
+        var sourceCode =
+            "// " + DateTime.Now.ToString("u") + "\n" +
+            dtoSources.source;
+        var fileName = dtoSources.recordName + ".g.cs";
+        spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
+    }
+
+    private static void ExecuteMapRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
+    {
+        var sourceBuilder = new SourceCodeBuilder();
+        var dtoSources = sourceBuilder.BuildMapRecord(spc, syntax);
 
         var sourceCode =
             "// " + DateTime.Now.ToString("u") + "\n" +
