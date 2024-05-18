@@ -31,3 +31,10 @@ public partial class MyClassDto_With_ExplicitPrivateConstructor
 }
 
 public class NotAClassDto;
+
+/// <summary>Should not get a factory method.
+/// If it does - the code will not compile as the class is not partial.
+/// Alas important it is not partial.
+/// </summary>
+[Serializable]
+public class MyClass_Without_DtoAttribute;

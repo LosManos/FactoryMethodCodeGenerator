@@ -5,21 +5,24 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace SourceGenerator;
 
-// https://andrewlock.net/creating-a-source-generator-part-1-creating-an-incremental-source-generator/
-
+/// <summary>See for origin of code:
+/// https://andrewlock.net/creating-a-source-generator-part-1-creating-an-incremental-source-generator/
+/// </summary>
 [Generator]
 public class DtoIncrementalGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Instead of RegisterForSyntaxNotifications, you use Providers
         var classSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
+                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me.
                 predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 },
                 transform: (ctx, _) => (ClassDeclarationSyntax)ctx.Node)
             .Where(static m => m is not null);
+
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
+                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me.
                 predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
                 transform: (ctx, _) => (RecordDeclarationSyntax)ctx.Node)
             .Where(static m => m is not null);
@@ -32,6 +35,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     static void ExecuteClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
     {
+        // Bail early if we are not interested.
+        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+
         var sourceBuilder = new SourceCodeBuilder();
         var dtoSources = sourceBuilder.BuildClass(spc, syntax);
 
@@ -44,6 +50,8 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
     {
+        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+
         var sourceBuilder = new SourceCodeBuilder();
         var dtoSources = sourceBuilder.BuildRecord(spc, syntax);
 
