@@ -1,5 +1,6 @@
 using ConsoleApp1;
 using ConsoleApp1.Deeper.Namespace;
+using FluentAssertions;
 
 namespace Test.ConsoleApp1;
 
@@ -38,5 +39,17 @@ public class RecordTest
     public void Deeper_namespace()
     {
         _ = MyRecordDto_With_DeeperNamespace.Create(42);
+    }
+
+    /// <summary>
+    ///  A record/class without the attibute should not be manipulated.
+    /// </summary>
+    [Theory]
+    [InlineData(typeof(NotARecordDto))]
+    [InlineData(typeof(MyRecord_Without_DtoAttribute))]
+    public void Only_manipulate_WHEN_correct_tag(Type withoutDtoAttribute)
+    {
+        var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
+        createMethod.Should().BeNull();
     }
 }

@@ -31,3 +31,10 @@ public partial record MyRecordDto_With_ExplicitPrivateConstructor
 }
 
 public record NotARecordDto;
+
+/// <summary>Should not get a factory method.
+/// If it does - the code will not compile as the record is not partial.
+/// Alas important it is not partial.
+/// </summary>
+[Serializable]
+public record MyRecord_Without_DtoAttribute;
