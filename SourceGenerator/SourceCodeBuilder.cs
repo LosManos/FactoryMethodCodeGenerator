@@ -61,9 +61,19 @@ internal class SourceCodeBuilder
     {
         var @namespace = GetNameSpace(syntax);
 
-        var sourceCode = $"public record RemoveMe;";
+        var record = CreateMapRecord(syntax);
 
-        return (sourceCode, @namespace.Name.ToString(), syntax.Identifier.ToString());
+        var namespaceDeclaration =
+            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
+                .AddMembers(record);
+
+        var unit = SyntaxFactory.CompilationUnit()
+            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
+            .AddMembers(namespaceDeclaration);
+
+//        var sourceCode = $"public record RemoveMe;";
+
+        return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
     }
 
     private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
@@ -167,6 +177,40 @@ internal class SourceCodeBuilder
             parameters = parameters.AddParameters(CreateParameter(propertyInfo));
         }
         return parameters;
+    }
+
+    private static RecordDeclarationSyntax CreateMapRecord(RecordDeclarationSyntax syntax)
+    {
+        var name = syntax.Identifier.Text;
+
+        var attributes = syntax.AttributeLists.GetMapAttributes();
+
+        var body = SyntaxFactory.ParseStatement("");
+
+        var methods = attributes.Select((a, index) =>
+                SyntaxFactory.MethodDeclaration(
+                    SyntaxFactory.ParseTypeName("void"),
+                     a.Name + index.ToString())
+                    .WithBody(SyntaxFactory.Block(body))
+                )
+            .ToArray();
+
+        var method = SyntaxFactory.MethodDeclaration(
+            SyntaxFactory.ParseTypeName("void"),
+            "MyMethodName");
+
+        var res = SyntaxFactory.RecordDeclaration(
+                SyntaxKind.RecordDeclaration,
+                SyntaxFactory.Token(SyntaxKind.RecordKeyword),
+                SyntaxFactory.Identifier(name))
+            .WithModifiers(SyntaxTokenList.Create(
+                SyntaxFactory.Token(SyntaxKind.PartialKeyword)
+            ))
+            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
+            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
+            .AddMembers(methods);
+
+        return res;
     }
 
     private static RecordDeclarationSyntax CreateRecord(RecordOrClassInfo recordOrClassInfo)
