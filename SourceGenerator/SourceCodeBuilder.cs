@@ -5,56 +5,8 @@ using MyInterface;
 
 namespace SourceGenerator;
 
-internal class SourceCodeBuilder
+internal partial class SourceCodeBuilder
 {
-    public ( string source, string namespaceName, string recordName) BuildClass(
-        SourceProductionContext spc,
-        ClassDeclarationSyntax syntax)
-    {
-        var @namespace = GetNameSpace(syntax);
-        var members = GetProperties(syntax);
-        var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
-
-        var @class = CreateClass(RecordOrClassInfo.Create(
-            syntax.Identifier.Text,
-            members.Select(PropertyInfo.Create),
-            usePrivateConstructor));
-
-        var namespaceDeclaration =
-            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
-                .AddMembers(@class);
-
-        var unit = SyntaxFactory.CompilationUnit()
-            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
-            .AddMembers(namespaceDeclaration);
-
-        return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
-    }
-
-    public (string source, string namespaceName, string recordName) BuildRecord(
-        SourceProductionContext spc,
-        RecordDeclarationSyntax syntax)
-    {
-        var @namespace = GetNameSpace(syntax);
-        var members = GetProperties(syntax);
-        var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
-
-        var record = CreateRecord(RecordOrClassInfo.Create(
-            syntax.Identifier.Text,
-            members.Select(PropertyInfo.Create),
-            usePrivateConstructor));
-
-        var namespaceDeclaration =
-            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
-                .AddMembers(record);
-
-        var unit = SyntaxFactory.CompilationUnit()
-            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
-            .AddMembers(namespaceDeclaration);
-
-        return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
-    }
-
     private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
     {
         return SyntaxFactory.Argument(SyntaxFactory.IdentifierName(propertyInfo.Name));
@@ -68,73 +20,6 @@ internal class SourceCodeBuilder
             arguments = arguments.AddArguments(CreateArgument(propertyInfo));
         }
         return arguments;
-    }
-
-    private ClassDeclarationSyntax CreateClass(RecordOrClassInfo recordOrClassInfo)
-    {
-        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
-        var constructor = CreateConstructor(constructorInfo);
-
-        var factoryMethod = CreateFactoryMethod(constructorInfo);
-
-        return SyntaxFactory.ClassDeclaration(SyntaxFactory.Identifier(recordOrClassInfo.Name))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
-            .AddMembers(constructor, factoryMethod);
-    }
-
-    /// <summary>Create a constructor taking a list of parameters
-    /// and updating properties of the same name.
-    /// </summary>
-    /// <param name="constructorInfo"></param>
-    /// <returns></returns>
-    private static ConstructorDeclarationSyntax CreateConstructor(ConstructorInfo constructorInfo)
-    {
-        var modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(constructorInfo.IsPrivateConstructor
-            ? SyntaxKind.PrivateKeyword
-            : SyntaxKind.PublicKeyword));
-
-        var parameters = CreateParameterList(constructorInfo.Properties);
-
-        var body = SyntaxFactory.Block(constructorInfo.Properties.Select(propertyInfo =>
-            // Assignment. E.g.: this.MyProperty = MyProperty;
-            SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                SyntaxKind.SimpleAssignmentExpression,
-                SyntaxFactory.IdentifierName("this." + propertyInfo.Name),
-                SyntaxFactory.IdentifierName(propertyInfo.Name)))
-        ));
-
-        var ret = SyntaxFactory.ConstructorDeclaration(SyntaxFactory.Identifier(constructorInfo.Name))
-            .WithModifiers(modifiers)
-            .WithParameterList(parameters)
-            .WithBody(body);
-        return ret;
-    }
-
-    private static MethodDeclarationSyntax CreateFactoryMethod(ConstructorInfo constructorInfo)
-    {
-        var modifiers = SyntaxFactory.TokenList(
-            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-            SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        var parameters = CreateParameterList(constructorInfo.Properties);
-        var arguments = CreateArgumentList(constructorInfo.Properties);
-
-        var body = SyntaxFactory.Block(
-            // Return. E.g.: return new MyDto(a,b,c);
-            SyntaxFactory.ReturnStatement(
-                SyntaxFactory.ObjectCreationExpression(
-                    SyntaxFactory.ParseTypeName(constructorInfo.Name)
-                ).WithArgumentList(arguments)
-            ));
-
-        var ret = SyntaxFactory.MethodDeclaration(
-                SyntaxFactory.ParseTypeName(constructorInfo.Name),
-                "Create")
-            .WithModifiers(modifiers)
-            .WithParameterList(parameters)
-            .WithBody(body);
-        return ret;
     }
 
     private static NamespaceDeclarationSyntax CreateNamespace(string nameSpaceName)
@@ -156,30 +41,6 @@ internal class SourceCodeBuilder
             parameters = parameters.AddParameters(CreateParameter(propertyInfo));
         }
         return parameters;
-    }
-
-    private static RecordDeclarationSyntax CreateRecord(RecordOrClassInfo recordOrClassInfo)
-    {
-        var propertiesAsString = string.Join(",", recordOrClassInfo.Properties.Select(p => p.Text));
-
-        var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
-
-        var constructor = CreateConstructor(constructorInfo);
-
-        var factoryMethod = CreateFactoryMethod(constructorInfo);
-
-        var res = SyntaxFactory.RecordDeclaration(
-                SyntaxKind.RecordDeclaration,
-                SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                SyntaxFactory.Identifier(recordOrClassInfo.Name))
-            .WithModifiers(SyntaxTokenList.Create(
-                SyntaxFactory.Token(SyntaxKind.PartialKeyword)
-            ))
-            .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertiesAsString}"))
-            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
-            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
-            .AddMembers(constructor, factoryMethod);
-        return res;
     }
 
     private static SyntaxTriviaList CreateSingleLineComment(string comment)
@@ -275,8 +136,6 @@ internal class SourceCodeBuilder
         // Get the argument value (i.e. the parameter) and try to get the value out of it.
         // If we cannot - return default value (true).
         var valueAsString = usePrivateConstructorArgument.Expression.NormalizeWhitespace().ToString();
-        return bool.TryParse(valueAsString, out var usePrivateConstructorValue)
-            ? usePrivateConstructorValue
-            : true;
+        return !bool.TryParse(valueAsString, out var usePrivateConstructorValue) || usePrivateConstructorValue;
     }
 }

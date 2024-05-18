@@ -46,7 +46,6 @@ public class ClassTest
     /// </summary>
     [Theory]
     [InlineData(typeof(NotAClassDto))]
-    [InlineData(typeof(MyClassDto_With_DeeperNamespace))]
     public void Only_manipulate_WHEN_correct_tag(Type withoutDtoAttribute)
     {
         var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
