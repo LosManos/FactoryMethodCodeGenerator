@@ -3,7 +3,7 @@ namespace MyInterface;
 /// <summary>Set this attribute on a class. Then all methods named `Map` will be mapping methods.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class MapAttribute(
+public class MapAttribute<TSource, TTarget>(
     Type source,
     Type target
 ) : Attribute

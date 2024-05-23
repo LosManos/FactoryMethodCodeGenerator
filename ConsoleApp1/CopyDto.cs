@@ -14,8 +14,10 @@ public partial record CopyTarget
     public int Value { get; private set; }
 }
 
-[Map(typeof(CopySource), typeof(CopyTarget))]
-public abstract partial record Map
+[Map<CopySource, CopyTarget>(typeof(CopySource), typeof(CopyTarget))]
+public abstract partial record Mapping
 {
 //    public abstract CopyTarget Map<CopyTarget>(CopySource source);
+
+// static partial void HelloFrom(string name);
 }

@@ -61,7 +61,7 @@ internal class SourceCodeBuilder
     {
         var @namespace = GetNameSpace(syntax);
 
-        var record = CreateMapRecord(syntax);
+        var record = CreateMapRecord(spc, syntax);
 
         var namespaceDeclaration =
             SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
@@ -179,21 +179,29 @@ internal class SourceCodeBuilder
         return parameters;
     }
 
-    private static RecordDeclarationSyntax CreateMapRecord(RecordDeclarationSyntax syntax)
+    private static RecordDeclarationSyntax CreateMapRecord(
+        SourceProductionContext spc,
+        RecordDeclarationSyntax syntax)
     {
         var name = syntax.Identifier.Text;
 
-        var attributes = syntax.AttributeLists.GetMapAttributes();
-
-        var body = SyntaxFactory.ParseStatement("");
+        var attributes = syntax.AttributeLists.GetMapAttributes()
+            .Select(a => (name: a.Name, sourceType: a.ArgumentList?.Arguments.First()));
 
         var methods = attributes.Select((a, index) =>
                 SyntaxFactory.MethodDeclaration(
                     SyntaxFactory.ParseTypeName("void"),
-                     a.Name + index.ToString())
-                    .WithBody(SyntaxFactory.Block(body))
+                     a.name + index.ToString())
+                    .WithBody(SyntaxFactory.Block(CreateBody(attributes)))
                 )
             .ToArray();
+
+        StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
+        {
+
+            var x = attributeData.Select(ad => ad.sourceType.ToString()).Single();
+            return SyntaxFactory.ParseStatement($"var x = \"{x}\";");
+        }
 
         var method = SyntaxFactory.MethodDeclaration(
             SyntaxFactory.ParseTypeName("void"),
