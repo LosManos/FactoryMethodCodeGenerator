@@ -183,25 +183,24 @@ internal class SourceCodeBuilder
         SourceProductionContext spc,
         RecordDeclarationSyntax syntax)
     {
+        var modifiers = SyntaxFactory.TokenList(
+            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+            SyntaxFactory.Token(SyntaxKind.StaticKeyword));
         var name = syntax.Identifier.Text;
 
         var attributes = syntax.AttributeLists.GetMapAttributes()
             .Select(a => (name: a.Name, sourceType: a.ArgumentList?.Arguments.First()));
 
-        var methods = attributes.Select((a, index) =>
+        var methods = attributes.Select((attrib, index) =>
                 SyntaxFactory.MethodDeclaration(
-                    SyntaxFactory.ParseTypeName("void"),
-                     a.name + index.ToString())
+                    SyntaxFactory.ParseTypeName(GetTargetTypeName(attrib.name)),
+                    GetSourceTypeName(attrib.name) +
+                     "_To_" +
+                    GetTargetTypeName(attrib.name)) // TODO:OF: Get the names SourceType and TargetType from the attribute.
+                    .WithModifiers(modifiers)
                     .WithBody(SyntaxFactory.Block(CreateBody(attributes)))
                 )
             .ToArray();
-
-        StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
-        {
-
-            var x = attributeData.Select(ad => ad.sourceType.ToString()).Single();
-            return SyntaxFactory.ParseStatement($"var x = \"{x}\";");
-        }
 
         var method = SyntaxFactory.MethodDeclaration(
             SyntaxFactory.ParseTypeName("void"),
@@ -219,6 +218,29 @@ internal class SourceCodeBuilder
             .AddMembers(methods);
 
         return res;
+
+        string GetSourceTypeName(NameSyntax ns)
+        {
+            var gns = (ns as GenericNameSyntax);
+            var arg = gns?.TypeArgumentList.Arguments[0];
+            var ins = (arg as IdentifierNameSyntax)?.Identifier.Text;
+            return ins ?? throw new Exception($"Error in {nameof(GetSourceTypeName)}.");
+        }
+
+        string GetTargetTypeName(NameSyntax ns)
+        {
+            var gns = (ns as GenericNameSyntax);
+            var arg = gns?.TypeArgumentList.Arguments[1];
+            var ins = (arg as IdentifierNameSyntax)?.Identifier.Text;
+            return ins ?? throw new Exception($"Error in {nameof(GetSourceTypeName)}.");
+        }
+
+        StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
+        {
+
+            var x = attributeData.Select(ad => ad.sourceType.ToString()).Single();
+            return SyntaxFactory.ParseStatement($"return default;");
+        }
     }
 
     private static RecordDeclarationSyntax CreateRecord(RecordOrClassInfo recordOrClassInfo)

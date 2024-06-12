@@ -16,8 +16,4 @@
     <ItemGroup>
       <ProjectReference Include="..\MyInterface\MyInterface.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\MyInterface\MyInterface.csproj" />
-    </ItemGroup>
 </Project>

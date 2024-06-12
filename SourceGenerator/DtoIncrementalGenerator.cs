@@ -62,7 +62,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var dtoSources = sourceBuilder.BuildMapRecord(spc, syntax);
 
         var sourceCode =
-            "// " + DateTime.Now.ToString("u") + "\n" +
+            "// " + DateTime.UtcNow.ToString("u") + "\n" +
             dtoSources.source;
         var fileName = dtoSources.recordName + ".g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
