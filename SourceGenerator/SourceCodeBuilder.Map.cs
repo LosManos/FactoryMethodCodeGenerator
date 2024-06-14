@@ -114,11 +114,34 @@ partial class SourceCodeBuilder
         // }
         StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
         {
+            var createCall =
+                SyntaxFactory.InvocationExpression(
+                        SyntaxFactory.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            SyntaxFactory.IdentifierName( GetTargetTypeName(attributeData.Single().name)),
+                            SyntaxFactory.IdentifierName("Create")))
+                    .WithArgumentList(
+                        SyntaxFactory.ArgumentList(
+                            SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                                SyntaxFactory.Argument(
+                                    SyntaxFactory.LiteralExpression(
+                                        SyntaxKind.NumericLiteralExpression,
+                                        SyntaxFactory.Literal(42))))));
+
+            var @var = SyntaxFactory.VariableDeclaration(
+                SyntaxFactory.IdentifierName(
+                    SyntaxFactory.Identifier(
+                        SyntaxFactory.TriviaList(),
+                        SyntaxKind.VarKeyword,
+                        "var",
+                        "var",
+                        SyntaxFactory.TriviaList())));
+
             // var result = CopyTarget.Create(...
             var assignment = SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
                 SyntaxKind.SimpleAssignmentExpression,
                 SyntaxFactory.IdentifierName("var result"),
-                SyntaxFactory.IdentifierName(GetTargetTypeName(attributeData.Single().name) + ".Create(" + "1" + ")")
+                createCall
             ));
 
             var body = SyntaxFactory.Block(
