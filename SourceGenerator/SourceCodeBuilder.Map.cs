@@ -114,9 +114,25 @@ partial class SourceCodeBuilder
         // }
         StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
         {
+            // var result = CopyTarget.Create(...
+            var assignment = SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxFactory.IdentifierName("var result"),
+                SyntaxFactory.IdentifierName(GetTargetTypeName(attributeData.Single().name) + ".Create(" + "1" + ")")
+            ));
 
-            var x = attributeData.Select(ad => ad.sourceType.ToString()).Single();
-            return SyntaxFactory.ParseStatement($"return default;"); // TODO:Implement what it should look like.
+            var body = SyntaxFactory.Block(
+                assignment
+            );
+
+            // var body = SyntaxFactory.Block(
+            //     // Return. E.g.: return new MyDto(a,b,c);
+            //     SyntaxFactory.ReturnStatement(
+            //         SyntaxFactory.ObjectCreationExpression(
+            //             SyntaxFactory.ParseTypeName(constructorInfo.Name)
+            //         ).WithArgumentList(arguments)
+            //     ));
+            return body.AddStatements(SyntaxFactory.ParseStatement($"return result;"));
         }
     }
 }
