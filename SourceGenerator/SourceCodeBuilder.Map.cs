@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace SourceGenerator;
 
@@ -15,11 +16,11 @@ partial class SourceCodeBuilder
         var record = CreateMapRecord(spc, syntax);
 
         var namespaceDeclaration =
-            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
+            NamespaceDeclaration(ParseName(@namespace.Name.ToString()))
                 .AddMembers(record);
 
-        var unit = SyntaxFactory.CompilationUnit()
-            .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
+        var unit = CompilationUnit()
+            .AddUsings(UsingDirective(ParseName("System")))
             .AddMembers(namespaceDeclaration);
 
 //        var sourceCode = $"public record RemoveMe;";
@@ -41,53 +42,53 @@ partial class SourceCodeBuilder
         SourceProductionContext spc,
         RecordDeclarationSyntax syntax)
     {
-        var methodModifiers = SyntaxFactory.TokenList(
-            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-            SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+        var methodModifiers = TokenList(
+            Token(SyntaxKind.PublicKeyword),
+            Token(SyntaxKind.StaticKeyword));
         var name = syntax.Identifier.Text;
 
         var attributes = syntax.AttributeLists.GetMapAttributes()
             .Select(a => (name: a.Name, sourceType: a.ArgumentList?.Arguments.First()));
 
         var methods = attributes.Select((attrib, index) =>
-                SyntaxFactory.MethodDeclaration(
-                    SyntaxFactory.ParseTypeName(GetTargetTypeName(attrib.name)),
+                MethodDeclaration(
+                    ParseTypeName(GetTargetTypeName(attrib.name)),
                     GetSourceTypeName(attrib.name) + "_To_" + GetTargetTypeName(attrib.name))
                     .WithModifiers(methodModifiers)
                     .WithParameterList(CreateParameters(attrib.name))
-                    .WithBody(SyntaxFactory.Block(CreateBody(attributes)))
+                    .WithBody(Block(CreateBody(attributes)))
                 )
             .ToArray();
 
-        var method = SyntaxFactory.MethodDeclaration(
-            SyntaxFactory.ParseTypeName("void"),
+        var method = MethodDeclaration(
+            ParseTypeName("void"),
             "MyMethodName");
 
-        var recordModifiers = SyntaxFactory.TokenList(
-            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-            SyntaxFactory.Token(SyntaxKind.AbstractKeyword),
-            SyntaxFactory.Token(SyntaxKind.PartialKeyword)
+        var recordModifiers = TokenList(
+            Token(SyntaxKind.PublicKeyword),
+            Token(SyntaxKind.AbstractKeyword),
+            Token(SyntaxKind.PartialKeyword)
         );
 
-        var res = SyntaxFactory.RecordDeclaration(
+        var res = RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
-                SyntaxFactory.Token(SyntaxKind.RecordKeyword),
-                SyntaxFactory.Identifier(name))
+                Token(SyntaxKind.RecordKeyword),
+                Identifier(name))
             .WithModifiers(recordModifiers)
-            .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
-            .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
+            .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
+            .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
             .AddMembers(methods);
 
         return res;
 
         ParameterListSyntax CreateParameters(NameSyntax ns)
         {
-            var parameters = SyntaxFactory.ParameterList()
+            var parameters = ParameterList()
                 .AddParameters(
                     CreateParameter(
                         PropertyInfo.Create(
                             "source",
-                            SyntaxFactory.IdentifierName(SyntaxFactory.Identifier(GetSourceTypeName(ns))),
+                            IdentifierName(Identifier(GetSourceTypeName(ns))),
                             string.Empty)));
             return parameters;
         }
@@ -115,36 +116,36 @@ partial class SourceCodeBuilder
         StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
         {
             var createCall =
-                SyntaxFactory.InvocationExpression(
-                        SyntaxFactory.MemberAccessExpression(
+                InvocationExpression(
+                        MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
-                            SyntaxFactory.IdentifierName( GetTargetTypeName(attributeData.Single().name)),
-                            SyntaxFactory.IdentifierName("Create")))
+                            IdentifierName( GetTargetTypeName(attributeData.Single().name)),
+                            IdentifierName("Create")))
                     .WithArgumentList(
-                        SyntaxFactory.ArgumentList(
-                            SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-                                SyntaxFactory.Argument(
-                                    SyntaxFactory.LiteralExpression(
+                        ArgumentList(
+                            SingletonSeparatedList<ArgumentSyntax>(
+                                Argument(
+                                    LiteralExpression(
                                         SyntaxKind.NumericLiteralExpression,
-                                        SyntaxFactory.Literal(42))))));
+                                        Literal(42))))));
 
-            var @var = SyntaxFactory.VariableDeclaration(
-                SyntaxFactory.IdentifierName(
-                    SyntaxFactory.Identifier(
-                        SyntaxFactory.TriviaList(),
+            var @var = VariableDeclaration(
+                IdentifierName(
+                    Identifier(
+                        TriviaList(),
                         SyntaxKind.VarKeyword,
                         "var",
                         "var",
-                        SyntaxFactory.TriviaList())));
+                        TriviaList())));
 
             // var result = CopyTarget.Create(...
-            var assignment = SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+            var assignment = ExpressionStatement(AssignmentExpression(
                 SyntaxKind.SimpleAssignmentExpression,
-                SyntaxFactory.IdentifierName("var result"),
+                IdentifierName("var result"),
                 createCall
             ));
 
-            var body = SyntaxFactory.Block(
+            var body = Block(
                 assignment
             );
 
@@ -155,7 +156,7 @@ partial class SourceCodeBuilder
             //             SyntaxFactory.ParseTypeName(constructorInfo.Name)
             //         ).WithArgumentList(arguments)
             //     ));
-            return body.AddStatements(SyntaxFactory.ParseStatement($"return result;"));
+            return body.AddStatements(ParseStatement($"return result;"));
         }
     }
 }
