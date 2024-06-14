@@ -179,11 +179,21 @@ internal class SourceCodeBuilder
         return parameters;
     }
 
+    /// <summary>Creates the record containing the mapping methods.
+    /// Crude example:
+    ///     public abstract partial record Mapping
+    ///     {
+    ///         public static CopyTarget CopySource_To_CopyTarget(CopySource source)
+    ///         {
+    ///             return CopyTarget.Create(source.Id, source.Name);
+    ///         }
+    ///     }
+    /// </summary>
     private static RecordDeclarationSyntax CreateMapRecord(
         SourceProductionContext spc,
         RecordDeclarationSyntax syntax)
     {
-        var modifiers = SyntaxFactory.TokenList(
+        var methodModifiers = SyntaxFactory.TokenList(
             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
             SyntaxFactory.Token(SyntaxKind.StaticKeyword));
         var name = syntax.Identifier.Text;
@@ -194,10 +204,9 @@ internal class SourceCodeBuilder
         var methods = attributes.Select((attrib, index) =>
                 SyntaxFactory.MethodDeclaration(
                     SyntaxFactory.ParseTypeName(GetTargetTypeName(attrib.name)),
-                    GetSourceTypeName(attrib.name) +
-                     "_To_" +
-                    GetTargetTypeName(attrib.name)) // TODO:OF: Get the names SourceType and TargetType from the attribute.
-                    .WithModifiers(modifiers)
+                    GetSourceTypeName(attrib.name) + "_To_" + GetTargetTypeName(attrib.name))
+                    .WithModifiers(methodModifiers)
+                    .WithParameterList(CreateParameters(attrib.name))
                     .WithBody(SyntaxFactory.Block(CreateBody(attributes)))
                 )
             .ToArray();
@@ -206,18 +215,34 @@ internal class SourceCodeBuilder
             SyntaxFactory.ParseTypeName("void"),
             "MyMethodName");
 
+        var recordModifiers = SyntaxFactory.TokenList(
+            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+            SyntaxFactory.Token(SyntaxKind.AbstractKeyword),
+            SyntaxFactory.Token(SyntaxKind.PartialKeyword)
+        );
+
         var res = SyntaxFactory.RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
                 SyntaxFactory.Token(SyntaxKind.RecordKeyword),
                 SyntaxFactory.Identifier(name))
-            .WithModifiers(SyntaxTokenList.Create(
-                SyntaxFactory.Token(SyntaxKind.PartialKeyword)
-            ))
+            .WithModifiers(recordModifiers)
             .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
             .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
             .AddMembers(methods);
 
         return res;
+
+        ParameterListSyntax CreateParameters(NameSyntax ns)
+        {
+            var parameters = SyntaxFactory.ParameterList()
+                .AddParameters(
+                    CreateParameter(
+                        PropertyInfo.Create(
+                            "source",
+                            SyntaxFactory.IdentifierName(SyntaxFactory.Identifier(GetSourceTypeName(ns))),
+                            string.Empty)));
+            return parameters;
+        }
 
         string GetSourceTypeName(NameSyntax ns)
         {
@@ -235,11 +260,15 @@ internal class SourceCodeBuilder
             return ins ?? throw new Exception($"Error in {nameof(GetSourceTypeName)}.");
         }
 
+        // Creates a body like
+        // {
+        //     return CopyTarget.Create(source.Id, source.Name);
+        // }
         StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
         {
 
             var x = attributeData.Select(ad => ad.sourceType.ToString()).Single();
-            return SyntaxFactory.ParseStatement($"return default;");
+            return SyntaxFactory.ParseStatement($"return default;"); // TODO:Implement what it should look like.
         }
     }
 
