@@ -47,7 +47,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
         var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildClass(spc, syntax);
+        var dtoSources = sourceBuilder.BuildDtoClass(spc, syntax);
 
         var sourceCode =
             "// " + DateTime.Now.ToString("u") + "\n" +
@@ -73,7 +73,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
         var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildRecord(spc, syntax);
+        var dtoSources = sourceBuilder.BuildDtoRecord(spc, syntax);
 
         var sourceCode =
             "// " + DateTime.Now.ToString("u") + "\n" +
