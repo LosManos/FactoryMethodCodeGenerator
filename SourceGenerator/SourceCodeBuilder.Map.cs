@@ -115,6 +115,16 @@ partial class SourceCodeBuilder
         // }
         StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
         {
+            (Type theType, string name)[] argumentsData = [(typeof(int), "Value")];
+            var memberAccessArguments = argumentsData.Select(ad =>
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("source"),
+                        IdentifierName(ad.name)
+                    ))
+                .Select(Argument);
+            var memberAccessArgumentsList = SeparatedList<ArgumentSyntax>(memberAccessArguments);
+
             var createCall =
                 InvocationExpression(
                         MemberAccessExpression(
@@ -122,21 +132,7 @@ partial class SourceCodeBuilder
                             IdentifierName( GetTargetTypeName(attributeData.Single().name)),
                             IdentifierName("Create")))
                     .WithArgumentList(
-                        ArgumentList(
-                            SingletonSeparatedList<ArgumentSyntax>(
-                                Argument(
-                                    LiteralExpression(
-                                        SyntaxKind.NumericLiteralExpression,
-                                        Literal(42))))));
-
-            var @var = VariableDeclaration(
-                IdentifierName(
-                    Identifier(
-                        TriviaList(),
-                        SyntaxKind.VarKeyword,
-                        "var",
-                        "var",
-                        TriviaList())));
+                        ArgumentList(memberAccessArgumentsList));
 
             // var result = CopyTarget.Create(...
             var assignment = ExpressionStatement(AssignmentExpression(
@@ -148,15 +144,15 @@ partial class SourceCodeBuilder
             var body = Block(
                 assignment
             );
-
-            // var body = SyntaxFactory.Block(
-            //     // Return. E.g.: return new MyDto(a,b,c);
-            //     SyntaxFactory.ReturnStatement(
-            //         SyntaxFactory.ObjectCreationExpression(
-            //             SyntaxFactory.ParseTypeName(constructorInfo.Name)
-            //         ).WithArgumentList(arguments)
-            //     ));
             return body.AddStatements(ParseStatement($"return result;"));
+        }
+
+        ArgumentSyntax CreateLiteralArgument(int value)
+        {
+            return Argument(
+                LiteralExpression(
+                    SyntaxKind.NumericLiteralExpression,
+                    Literal(value)));
         }
     }
 }
