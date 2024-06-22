@@ -136,8 +136,6 @@ internal partial class SourceCodeBuilder
         // Get the argument value (i.e. the parameter) and try to get the value out of it.
         // If we cannot - return default value (true).
         var valueAsString = usePrivateConstructorArgument.Expression.NormalizeWhitespace().ToString();
-        return bool.TryParse(valueAsString, out var usePrivateConstructorValue)
-            ? usePrivateConstructorValue
-            : true;
+        return !bool.TryParse(valueAsString, out var usePrivateConstructorValue) || usePrivateConstructorValue;
     }
 }

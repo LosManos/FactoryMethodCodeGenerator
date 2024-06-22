@@ -45,18 +45,20 @@ partial class SourceCodeBuilder
         var methodModifiers = TokenList(
             Token(SyntaxKind.PublicKeyword),
             Token(SyntaxKind.StaticKeyword));
-        var name = syntax.Identifier.Text;
+        var recordName = syntax.Identifier.Text;
 
-        var attributes = syntax.AttributeLists.GetMapAttributes()
+        var mapAttributes = syntax.AttributeLists.GetMapAttributes()
             .Select(a => (name: a.Name, sourceType: a.ArgumentList?.Arguments.First()));
 
-        var methods = attributes.Select((attrib, index) =>
+        var mapFunctionSourceParameterName = "source";
+
+        var methods = mapAttributes.Select(attrib =>
                 MethodDeclaration(
                     ParseTypeName(GetTargetTypeName(attrib.name)),
                     GetSourceTypeName(attrib.name) + "_To_" + GetTargetTypeName(attrib.name))
                     .WithModifiers(methodModifiers)
-                    .WithParameterList(CreateParameters(attrib.name))
-                    .WithBody(Block(CreateBody(attributes)))
+                    .WithParameterList(CreateCopyFunctionParameter(attrib.name, mapFunctionSourceParameterName))
+                    .WithBody(Block(CreateBody(mapAttributes, mapFunctionSourceParameterName)))
                 )
             .ToArray();
 
@@ -73,7 +75,7 @@ partial class SourceCodeBuilder
         var res = RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
                 Token(SyntaxKind.RecordKeyword),
-                Identifier(name))
+                Identifier(recordName))
             .WithModifiers(recordModifiers)
             .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
             .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken))
@@ -81,19 +83,19 @@ partial class SourceCodeBuilder
 
         return res;
 
-        ParameterListSyntax CreateParameters(NameSyntax ns)
+        static ParameterListSyntax CreateCopyFunctionParameter(NameSyntax ns, string sourceParameterName)
         {
             var parameters = ParameterList()
                 .AddParameters(
                     CreateParameter(
                         PropertyInfo.Create(
-                            "source",
+                            sourceParameterName,
                             IdentifierName(Identifier(GetSourceTypeName(ns))),
                             string.Empty)));
             return parameters;
         }
 
-        string GetSourceTypeName(NameSyntax ns)
+        static string GetSourceTypeName(NameSyntax ns)
         {
             var gns = (ns as GenericNameSyntax);
             var arg = gns?.TypeArgumentList.Arguments[0];
@@ -101,7 +103,7 @@ partial class SourceCodeBuilder
             return ins ?? throw new Exception($"Error in {nameof(GetSourceTypeName)}.");
         }
 
-        string GetTargetTypeName(NameSyntax ns)
+        static string GetTargetTypeName(NameSyntax ns)
         {
             var gns = (ns as GenericNameSyntax);
             var arg = gns?.TypeArgumentList.Arguments[1];
@@ -113,13 +115,17 @@ partial class SourceCodeBuilder
         // {
         //     return CopyTarget.Create(source.Id, source.Name);
         // }
-        StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData)
+        static StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData, string parameterName)
         {
+            const string resultVariableName = "result";
+
+            // TODO:OF:This is a simple hard coded array. Get the proper properties.
             (Type theType, string name)[] argumentsData = [(typeof(int), "Value")];
+
             var memberAccessArguments = argumentsData.Select(ad =>
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName("source"),
+                        IdentifierName(parameterName),
                         IdentifierName(ad.name)
                     ))
                 .Select(Argument);
@@ -137,14 +143,14 @@ partial class SourceCodeBuilder
             // var result = CopyTarget.Create(...
             var assignment = ExpressionStatement(AssignmentExpression(
                 SyntaxKind.SimpleAssignmentExpression,
-                IdentifierName("var result"),
+                IdentifierName($"var {resultVariableName}"),
                 createCall
             ));
 
             var body = Block(
                 assignment
             );
-            return body.AddStatements(ParseStatement($"return result;"));
+            return body.AddStatements(ParseStatement($"return {resultVariableName};"));
         }
 
         ArgumentSyntax CreateLiteralArgument(int value)
