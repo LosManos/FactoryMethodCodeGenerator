@@ -128,21 +128,16 @@ partial class SourceCodeBuilder
         {
             const string resultVariableName = "result";
 
-            // TODO:OF:This is a simple hard coded array. Get the proper properties.
-            // Something like attributeData.sourceType..getProperties
-            (Type theType, string name)[] argumentsData = [(typeof(int), "Value")];
-
             var attribute = attributeData.First().sourceType.FirstAncestorOrSelf<AttributeSyntax>()
                 ?? throw new Exception("Could not find the target attribute.");
-            // var args = attribute.ArgumentList.Arguments;
 
             var targetProperties  = GetTargetProperties(attribute, semanticModel);
 
-            var memberAccessArguments = argumentsData.Select(ad =>
+            var memberAccessArguments = targetProperties.Select(tp =>
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
                         IdentifierName(parameterName),
-                        IdentifierName(ad.name)
+                        IdentifierName(tp.Name)
                     ))
                 .Select(Argument);
             var memberAccessArgumentsList = SeparatedList<ArgumentSyntax>(memberAccessArguments);
