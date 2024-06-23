@@ -6,10 +6,10 @@ namespace MyInterface;
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class MapAttribute<TSource, TTarget>(
-    Type source,
-    Type target
+    Type sourceType,
+    Type targetType
 ) : Attribute
 {
-    public Type Source { get; } = source;
-    public Type Target { get; } = target;
+    public Type SourceType { get; } = sourceType;
+    public Type Target { get; } = targetType;
 }
