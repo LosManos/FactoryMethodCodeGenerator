@@ -9,11 +9,12 @@ partial class SourceCodeBuilder
 {
     public (string source, string namespaceName, string recordName) BuildMapRecord(
         SourceProductionContext spc,
+        SemanticModel semanticModel,
         RecordDeclarationSyntax syntax)
     {
         var @namespace = GetNameSpace(syntax);
 
-        var record = CreateMapRecord(spc, syntax);
+        var record = CreateMapRecord(spc, semanticModel, syntax);
 
         var namespaceDeclaration =
             NamespaceDeclaration(ParseName(@namespace.Name.ToString()))
@@ -40,6 +41,7 @@ partial class SourceCodeBuilder
     /// </summary>
     private static RecordDeclarationSyntax CreateMapRecord(
         SourceProductionContext spc,
+        SemanticModel semanticModel,
         RecordDeclarationSyntax syntax)
     {
         var methodModifiers = TokenList(
@@ -48,7 +50,10 @@ partial class SourceCodeBuilder
         var recordName = syntax.Identifier.Text;
 
         var mapAttributes = syntax.AttributeLists.GetMapAttributes()
-            .Select(a => (name: a.Name, sourceType: a.ArgumentList?.Arguments.First()));
+            .Select(a => (
+                name: a.Name,   // Name of the attribute. Something line `Map<SourceType,TargetType>`.
+                sourceType: a.ArgumentList?.Arguments.First())  // The first argument. Something like `SourceType`.
+            );
 
         var mapFunctionSourceParameterName = "source";
 
@@ -58,7 +63,7 @@ partial class SourceCodeBuilder
                     GetSourceTypeName(attrib.name) + "_To_" + GetTargetTypeName(attrib.name))
                     .WithModifiers(methodModifiers)
                     .WithParameterList(CreateCopyFunctionParameter(attrib.name, mapFunctionSourceParameterName))
-                    .WithBody(Block(CreateBody(mapAttributes, mapFunctionSourceParameterName)))
+                    .WithBody(Block(CreateBody(spc, semanticModel, mapAttributes, mapFunctionSourceParameterName)))
                 )
             .ToArray();
 
@@ -115,12 +120,23 @@ partial class SourceCodeBuilder
         // {
         //     return CopyTarget.Create(source.Id, source.Name);
         // }
-        static StatementSyntax CreateBody(IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData, string parameterName)
+        static StatementSyntax CreateBody(
+            SourceProductionContext sourceProductionContext,
+            SemanticModel semanticModel,
+            IEnumerable<(NameSyntax name, AttributeArgumentSyntax? sourceType)> attributeData,
+            string parameterName)
         {
             const string resultVariableName = "result";
 
             // TODO:OF:This is a simple hard coded array. Get the proper properties.
+            // Something like attributeData.sourceType..getProperties
             (Type theType, string name)[] argumentsData = [(typeof(int), "Value")];
+
+            var attribute = attributeData.First().sourceType.FirstAncestorOrSelf<AttributeSyntax>()
+                ?? throw new Exception("Could not find the target attribute.");
+            // var args = attribute.ArgumentList.Arguments;
+
+            var targetProperties  = GetTargetProperties(attribute, semanticModel);
 
             var memberAccessArguments = argumentsData.Select(ad =>
                     MemberAccessExpression(
@@ -159,6 +175,27 @@ partial class SourceCodeBuilder
                 LiteralExpression(
                     SyntaxKind.NumericLiteralExpression,
                     Literal(value)));
+        }
+
+        static IEnumerable<(ITypeSymbol Type, string Name)> GetTargetProperties(AttributeSyntax attribute, SemanticModel semanticModel1)
+        {
+            if (attribute.Name is GenericNameSyntax genericNameSyntax)
+            {
+                var typeArguments = genericNameSyntax.TypeArgumentList.Arguments;
+                // First argument is Source, second is Target.
+                var arg = typeArguments[1];
+                var info = semanticModel1.GetTypeInfo(arg);
+
+                if (info.Type is INamedTypeSymbol namedTypeSymbol)
+                {
+                    var properties = namedTypeSymbol.GetMembers()
+                        .OfType<IPropertySymbol>()
+                        .Where(p => p.DeclaredAccessibility == Accessibility.Public)
+                        .Select(p => (p.Type, p.Name));
+                    return properties;
+                }
+            }
+            throw new Exception("Something went wrong when trying to find the argument for target.");
         }
     }
 }

@@ -30,15 +30,19 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
-                transform: (ctx, _) => (RecordDeclarationSyntax)ctx.Node)
-            .Where(static rds => rds is not null && rds.AttributeLists.HasMapAttribute());
+                transform: (ctx, _) =>
+                {
+                    var semanticModel = ctx.SemanticModel;
+                    return (SemanticModel: semanticModel, Node: (RecordDeclarationSyntax)ctx.Node);
+                })
+            .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteClass(spc, syntax));
         context.RegisterSourceOutput(recordSyntaxProvider,
             static (spc, syntax) => ExecuteRecord(spc, syntax));
         context.RegisterSourceOutput(mapSyntaxProvider,
-            static (spc, syntax) => ExecuteMapRecord(spc, syntax));
+            static (spc, x) => ExecuteMapRecord(spc, x.SemanticModel, x.Node));
     }
 
     static void ExecuteClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
@@ -56,10 +60,10 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 
-    private static void ExecuteMapRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
+    private static void ExecuteMapRecord(SourceProductionContext spc, SemanticModel semanticModel, RecordDeclarationSyntax syntax)
     {
         var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildMapRecord(spc, syntax);
+        var dtoSources = sourceBuilder.BuildMapRecord(spc, semanticModel, syntax);
 
         var sourceCode =
             "// " + DateTime.UtcNow.ToString("u") + "\n" +
