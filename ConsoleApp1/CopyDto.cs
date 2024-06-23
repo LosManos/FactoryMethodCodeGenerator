@@ -6,12 +6,14 @@ namespace ConsoleApp1;
 public partial record CopySource
 {
     public int Value { get; init; }
+    public string Name { get; init; }
 }
 
 [Dto]
 public partial record CopyTarget
 {
     public int Value { get; private set; }
+    public string Name { get; init; }
 }
 
 [Map<CopySource, CopyTarget>(typeof(CopySource), typeof(CopyTarget))]
