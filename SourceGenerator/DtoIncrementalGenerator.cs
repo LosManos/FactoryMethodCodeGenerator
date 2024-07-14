@@ -56,7 +56,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var sourceCode =
             "// " + DateTime.Now.ToString("u") + "\n" +
             dtoSources.source;
-        var fileName = dtoSources.recordName + ".g.cs";
+        var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 
@@ -81,7 +81,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var sourceCode =
             "// " + DateTime.Now.ToString("u") + "\n" +
             dtoSources.source;
-        var fileName = dtoSources.recordName + ".g.cs";
+        var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 }
