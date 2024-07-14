@@ -1,8 +1,9 @@
 using MyInterface;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace ConsoleApp1;
+namespace DtoTest;
 
 [Dto]
 public partial class MyClassDto_With_DifferentTypes

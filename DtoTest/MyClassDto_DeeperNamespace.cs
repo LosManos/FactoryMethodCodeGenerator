@@ -3,10 +3,10 @@ using MyInterface;
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable once CheckNamespace
-namespace ConsoleApp1.Deeper.Namespace
+namespace DtoTest.Deeper.Namespace
 {
     [Dto]
-    public partial record MyRecordDto_With_DeeperNamespace
+    public partial class MyClassDto_With_DeeperNamespace
     {
         public int MyFirstValue { get; init; }
     }

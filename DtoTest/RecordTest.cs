@@ -1,8 +1,7 @@
-using ConsoleApp1;
-using ConsoleApp1.Deeper.Namespace;
+using DtoTest.Deeper.Namespace;
 using FluentAssertions;
 
-namespace Test.ConsoleApp1;
+namespace DtoTest;
 
 public class RecordTest
 {
@@ -39,6 +38,7 @@ public class RecordTest
     public void Deeper_namespace()
     {
         _ = MyRecordDto_With_DeeperNamespace.Create(42);
+        // If it compiles it works.
     }
 
     /// <summary>
