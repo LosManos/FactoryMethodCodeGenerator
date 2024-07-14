@@ -54,7 +54,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var dtoSources = sourceBuilder.BuildDtoClass(spc, syntax);
 
         var sourceCode =
-            "// " + DateTime.Now.ToString("u") + "\n" +
+            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
             dtoSources.source;
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
@@ -79,7 +79,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var dtoSources = sourceBuilder.BuildDtoRecord(spc, syntax);
 
         var sourceCode =
-            "// " + DateTime.Now.ToString("u") + "\n" +
+            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
             dtoSources.source;
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
