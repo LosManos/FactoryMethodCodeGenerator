@@ -13,7 +13,9 @@ partial class SourceCodeBuilder
     {
         var @namespace = GetNameSpace(syntax).Name.ToString();
 
-        var record = CreateMapRecord(context, syntax);
+        var mappingInfo = GetMappingInformation(syntax);
+
+        var record = CreateMapRecord(mappingInfo, context);
 
         var namespaceDeclaration =
             NamespaceDeclaration(ParseName(@namespace))
@@ -37,24 +39,25 @@ partial class SourceCodeBuilder
     ///     }
     /// </summary>
     private static RecordDeclarationSyntax CreateMapRecord(
-        (SourceProductionContext spc, SemanticModel semanticModel) context,
-        RecordDeclarationSyntax syntax)
+        MappingInfos mappingInfos,
+        (SourceProductionContext spc, SemanticModel semanticModel) context) // TODO:OF:Get rid of context. Context should only be to the Build method.
     {
         // The name of the parameter for the mapping function.
         // E.g.: `Source_To_Target(Source source)` where this is "source".
         var mapFunctionSourceParameterName = "source";
 
-        // The name of the record containing the mapping methods.
-        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
-        var recordName = syntax.Identifier.Text
-            ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
+        // // The name of the record containing the mapping methods.
+        // // E.g.: `public abstract partial record Mapping` where this is "Mapping".
+        // var recordName = syntax.Identifier.Text
+        //     ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
+        var recordName = mappingInfos.RecordName;
 
-        var methods = GetMappingInformation(syntax)
+        var methods = mappingInfos.Infos
             .Select(attrib =>
                 CreateMappingMethod(context,
-                    attrib.sourceTypeName,
-                    attrib.targetTypeName,
-                    attrib.sourceType,
+                    attrib.SourceTypeName,
+                    attrib.TargetTypeName,
+                    attrib.SourceType,
                     mapFunctionSourceParameterName)
             );
 
@@ -68,7 +71,7 @@ partial class SourceCodeBuilder
             .AddMembers(methods.ToArray());
     }
 
-    private static IEnumerable<(string sourceTypeName, string targetTypeName, AttributeArgumentSyntax? sourceType)> GetMappingInformation(RecordDeclarationSyntax syntax)
+    private static MappingInfos GetMappingInformation(RecordDeclarationSyntax syntax)
     {
         var mapAttributes = syntax.AttributeLists.GetMapAttributes()
             .Select(a => (
@@ -77,7 +80,18 @@ partial class SourceCodeBuilder
                 targetTypeName: GetMappingTargetTypeName(a.Name),
                 sourceType: a.ArgumentList?.Arguments.Skip(1).First())
             );
-        return mapAttributes;
+        // The name of the record containing the mapping methods.
+        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
+        var recordName = syntax.Identifier.Text
+            ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
+
+        return MappingInfos.Create(
+            recordName,
+            mapAttributes.Select(ma => MappingInfo.Create(
+                "", // TODO:OF:What is this?
+                ma.sourceTypeName,
+                ma.targetTypeName,
+                ma.sourceType)));
     }
 
     private static IEnumerable<string> GetTargetPropertyNames(NameSyntax nameSyntax, SemanticModel semanticModel)
