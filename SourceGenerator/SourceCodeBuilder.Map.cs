@@ -7,6 +7,16 @@ namespace SourceGenerator;
 
 partial class SourceCodeBuilder
 {
+    /// <summary>Creates a method for copying all data from one class to another.
+    ///
+    /// A Build...-method takes whatever Roslyn-ish is needed
+    /// and distills the needed data for creating the result
+    /// with as little as Roslyn knowledge as possible.
+    /// So avoid passing <see cref="SourceProductionContext"/>, <see cref="SemanticModel"/> and <see cref="ClassDeclarationSyntax"/> along.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="syntax"></param>
+    /// <returns></returns>
     public static (string source, string namespaceName, string recordName) BuildMapRecord(
         (SourceProductionContext spc, SemanticModel semanticModel) context,
         RecordDeclarationSyntax syntax)

@@ -6,8 +6,18 @@ namespace SourceGenerator;
 
 partial class SourceCodeBuilder
 {
-        public ( string source, string namespaceName, string recordName) BuildDtoClass(
-        SourceProductionContext spc,
+    /// <summary>Creates a DTO class.
+    ///
+    /// A Build...-method takes whatever Roslyn-ish is needed
+    /// and distills the needed data for creating the result
+    /// with as little as Roslyn knowledge as possible.
+    /// So avoid passing <see cref="SourceProductionContext"/>, <see cref="ClassDeclarationSyntax"/> along.
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="syntax"></param>
+    /// <returns></returns>
+    public ( string source, string namespaceName, string recordName) BuildDtoClass(
+        SourceProductionContext _,
         ClassDeclarationSyntax syntax)
     {
         var @namespace = GetNameSpace(syntax);
@@ -43,8 +53,19 @@ partial class SourceCodeBuilder
             .AddMembers(constructor, factoryMethod);
     }
 
+    /// <summary>Creates a DTO record.
+    ///
+    /// A Build...-method takes whatever Roslyn-ish is needed
+    /// and distills the needed data for creating the result
+    /// with as little as Roslyn knowledge as possible.
+    /// So avoid passing <see cref="SourceProductionContext"/>, <see cref="ClassDeclarationSyntax"/> along.
+    ///
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="syntax"></param>
+    /// <returns></returns>
     public (string source, string namespaceName, string recordName) BuildDtoRecord(
-        SourceProductionContext spc,
+        SourceProductionContext _,
         RecordDeclarationSyntax syntax)
     {
         var @namespace = GetNameSpace(syntax);

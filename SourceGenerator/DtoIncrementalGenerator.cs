@@ -38,14 +38,14 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
-            static (spc, syntax) => ExecuteClass(spc, syntax));
+            static (spc, syntax) => ExecuteDtoClass(spc, syntax));
         context.RegisterSourceOutput(recordSyntaxProvider,
-            static (spc, syntax) => ExecuteRecord(spc, syntax));
+            static (spc, syntax) => ExecuteDtoRecord(spc, syntax));
         context.RegisterSourceOutput(mapSyntaxProvider,
-            static (spc, x) => ExecuteMapRecord((spc, x.SemanticModel), x.Node));
+            static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    static void ExecuteClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
+    static void ExecuteDtoClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
@@ -71,7 +71,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         context.spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 
-    private static void ExecuteRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
+    private static void ExecuteDtoRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
     {
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
