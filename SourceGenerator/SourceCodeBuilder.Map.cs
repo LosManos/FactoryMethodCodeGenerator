@@ -18,14 +18,45 @@ internal partial class SourceCodeBuilder
     /// <param name="syntax"></param>
     /// <returns></returns>
     public static (string source, string namespaceName, string recordName) BuildMapRecord(
-        (SourceProductionContext spc, SemanticModel semanticModel) context,
+        (SourceProductionContext _, SemanticModel semanticModel) context,
         RecordDeclarationSyntax syntax)
     {
         var @namespace = GetNameSpace(syntax).Name.ToString();
 
         var mappingInfo = GetMappingInformation(syntax);
 
-        var record = CreateMapRecord(mappingInfo, context);
+        // The name of the parameter for the mapping function.
+        // E.g.: `Source_To_Target(Source source)` where this is "source".
+        var mapFunctionSourceParameterName = "source";
+
+        var methods = mappingInfo.Infos
+            .Select(attrib =>
+                {
+                    var attributeName = attrib.SourceType?.FirstAncestorOrSelf<AttributeSyntax>()?.Name
+                                        ?? throw new Exception("Could not find the target attribute.");
+
+                    if (attributeName is GenericNameSyntax genericNameSyntax)
+                    {
+                        var typeArguments = genericNameSyntax.TypeArgumentList.Arguments;
+                        var targetTypeArgument = typeArguments[1]; // First argument is Source, second is Target.
+                        var targetTypeInfo = context.semanticModel.GetTypeInfo(targetTypeArgument);
+
+                        return CreateMappingMethod(attrib.SourceTypeName,
+                            attrib.TargetTypeName,
+                            targetTypeInfo,
+                            mapFunctionSourceParameterName);
+                    }
+
+                    throw new Exception("Something went wrong when trying to find the argument for target.");
+                }
+            );
+
+        // The name of the record containing the mapping methods.
+        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
+        var recordName = mappingInfo.RecordName
+            ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
+
+        var record = CreateMapRecord(recordName, methods);
 
         var namespaceDeclaration =
             NamespaceDeclaration(ParseName(@namespace))
@@ -49,28 +80,9 @@ internal partial class SourceCodeBuilder
     ///     }
     /// </summary>
     private static RecordDeclarationSyntax CreateMapRecord(
-        MappingInfos mappingInfos,
-        (SourceProductionContext spc, SemanticModel semanticModel) context) // TODO:OF:Get rid of context. Context should only be to the Build method.
+        string recordName,
+        IEnumerable<MemberDeclarationSyntax> methods)
     {
-        // The name of the parameter for the mapping function.
-        // E.g.: `Source_To_Target(Source source)` where this is "source".
-        var mapFunctionSourceParameterName = "source";
-
-        // // The name of the record containing the mapping methods.
-        // // E.g.: `public abstract partial record Mapping` where this is "Mapping".
-        // var recordName = syntax.Identifier.Text
-        //     ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
-        var recordName = mappingInfos.RecordName;
-
-        var methods = mappingInfos.Infos
-            .Select(attrib =>
-                CreateMappingMethod(context,
-                    attrib.SourceTypeName,
-                    attrib.TargetTypeName,
-                    attrib.SourceType,
-                    mapFunctionSourceParameterName)
-            );
-
         return RecordDeclaration(
                 SyntaxKind.RecordDeclaration,
                 Token(SyntaxKind.RecordKeyword),
@@ -104,21 +116,14 @@ internal partial class SourceCodeBuilder
                 ma.sourceType)));
     }
 
-    private static IEnumerable<string> GetTargetPropertyNames(NameSyntax nameSyntax, SemanticModel semanticModel)
+    private static IEnumerable<string> GetTargetPropertyNames(TypeInfo targetTypeInfo)
     {
-        if (nameSyntax is GenericNameSyntax genericNameSyntax)
+        if (targetTypeInfo.Type is INamedTypeSymbol namedTypeSymbol)
         {
-            var typeArguments = genericNameSyntax.TypeArgumentList.Arguments;
-
-            // First argument is Source, second is Target.
-            var info = semanticModel.GetTypeInfo(typeArguments[1]);
-
-            if (info.Type is INamedTypeSymbol namedTypeSymbol)
-            {
-                return GetPublicPropertyNames(namedTypeSymbol);
-            }
+            return GetPublicPropertyNames(namedTypeSymbol);
         }
-        throw new Exception("Something went wrong when trying to find the argument for target.");
+
+        throw new Exception("Something went wrong when trying to find the argument name for target.");
     }
 
     /// <summary>Returns ["A", "B"] for
@@ -151,22 +156,26 @@ internal partial class SourceCodeBuilder
                         string.Empty)));
     }
 
-    // Creates a body like
-    // {
-    //     return CopyTarget.Create(source.Id, source.Name);
-    // }
+    /// <summary> Creates a body like
+    /// ```
+    /// {
+    ///     return CopyTarget.Create(source.Id, source.Name);
+    /// }
+    /// ```
+    /// </summary>
+    /// <param name="targetAttributeName"></param>
+    /// <param name="targetTypeInfo"></param>
+    /// <param name="parameterName"></param>
+    /// <returns></returns>
     static BlockSyntax CreateBody(
-        (SourceProductionContext _, SemanticModel semanticModel) context,
-        (string name, AttributeArgumentSyntax? sourceType) attributeData,
+        string targetAttributeName,
+        TypeInfo targetTypeInfo,
         string parameterName)
     {
         const string resultVariableName = "result";
         const string factoryMethodName = "Create";
 
-        var attributeName = attributeData.sourceType?.FirstAncestorOrSelf<AttributeSyntax>()?.Name
-                            ?? throw new Exception("Could not find the target attribute.");
-
-        var targetPropertyNames = GetTargetPropertyNames(attributeName, context.semanticModel).ToArray();
+        var targetPropertyNames = GetTargetPropertyNames(targetTypeInfo).ToArray();
 
         var memberAccessArgumentsList = GenerateParametersForFactoryMethodCall(targetPropertyNames, parameterName);
 
@@ -175,7 +184,7 @@ internal partial class SourceCodeBuilder
             InvocationExpression(
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
-                        IdentifierName(attributeData.name),
+                        IdentifierName(targetAttributeName),
                         IdentifierName(factoryMethodName)))
                 .WithArgumentList(
                     ArgumentList(memberAccessArgumentsList));
@@ -207,11 +216,9 @@ internal partial class SourceCodeBuilder
             Comment($"// {commentText}"));
     }
 
-    private static MemberDeclarationSyntax CreateMappingMethod(
-        (SourceProductionContext _, SemanticModel semanticModel) context,
-        string sourceTypeName,
+    private static MemberDeclarationSyntax CreateMappingMethod(string sourceTypeName,
         string targetTypeName,
-        AttributeArgumentSyntax? sourceType,
+        TypeInfo targetTypeInfo,
         string mapFunctionSourceParameterName)
     {
         var methodModifiers = TokenList(
@@ -225,8 +232,8 @@ internal partial class SourceCodeBuilder
             .WithParameterList(CreateCopyFunctionParameter(sourceTypeName, mapFunctionSourceParameterName))
             .WithBody(
                 CreateBody(
-                    context,
-                    (targetTypeName, sourceType),
+                    targetTypeName,
+                    targetTypeInfo,
                     mapFunctionSourceParameterName
                 )
             );
