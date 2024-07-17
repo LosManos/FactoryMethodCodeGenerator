@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SourceGenerator;
 
-partial class SourceCodeBuilder
+internal partial class SourceCodeBuilder
 {
     /// <summary>Creates a DTO class.
     ///

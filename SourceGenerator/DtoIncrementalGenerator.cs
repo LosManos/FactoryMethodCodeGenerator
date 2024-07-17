@@ -45,7 +45,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    static void ExecuteDtoClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
+    private static void ExecuteDtoClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
