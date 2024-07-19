@@ -21,7 +21,7 @@ internal partial class SourceCodeBuilder
         (SourceProductionContext _, SemanticModel semanticModel) context,
         RecordDeclarationSyntax syntax)
     {
-        var @namespace = SyntaxHelper.GetNameSpace(syntax).Name.ToString();
+        var namespaceName = SyntaxHelper.GetNameSpaceName(syntax);
 
         var mappingInfo = GetMappingInformation(syntax);
 
@@ -59,14 +59,14 @@ internal partial class SourceCodeBuilder
         var record = CreateMapRecord(recordName, methods);
 
         var namespaceDeclaration =
-            NamespaceDeclaration(ParseName(@namespace))
+            NamespaceDeclaration(ParseName(namespaceName))
                 .AddMembers(record);
 
         var unit = CompilationUnit()
             .AddUsings(UsingDirective(ParseName("System")))
             .AddMembers(namespaceDeclaration);
 
-        return (unit.NormalizeWhitespace().ToFullString(), @namespace, syntax.Identifier.ToString());
+        return (unit.NormalizeWhitespace().ToFullString(), namespaceName, syntax.Identifier.ToString());
     }
 
     /// <summary>Creates the record containing the mapping methods.

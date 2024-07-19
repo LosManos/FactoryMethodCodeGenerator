@@ -20,24 +20,25 @@ internal partial class SourceCodeBuilder
         SourceProductionContext _,
         ClassDeclarationSyntax syntax)
     {
-        var @namespace = SyntaxHelper.GetNameSpace(syntax);
+        var nameSpaceName = SyntaxHelper.GetNameSpaceName(syntax);
         var members = SyntaxHelper.GetProperties(syntax);
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
+        var className = syntax.Identifier.Text;
 
         var @class = CreateDtoClass(RecordOrClassInfo.Create(
-            syntax.Identifier.Text,
+            className,
             members.Select(PropertyInfo.Create),
             usePrivateConstructor));
 
         var namespaceDeclaration =
-            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
+            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpaceName))
                 .AddMembers(@class);
 
         var unit = SyntaxFactory.CompilationUnit()
             .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
             .AddMembers(namespaceDeclaration);
 
-        return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
+        return (unit.NormalizeWhitespace().ToFullString(), nameSpaceName, className);
     }
 
     private ClassDeclarationSyntax CreateDtoClass(RecordOrClassInfo recordOrClassInfo)
@@ -68,24 +69,25 @@ internal partial class SourceCodeBuilder
         SourceProductionContext _,
         RecordDeclarationSyntax syntax)
     {
-        var @namespace = SyntaxHelper.GetNameSpace(syntax);
+        var namespaceName = SyntaxHelper.GetNameSpaceName(syntax);
         var members = SyntaxHelper.GetProperties(syntax);
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
+        var recordName = syntax.Identifier.Text;
 
         var record = CreateDtoRecord(RecordOrClassInfo.Create(
-            syntax.Identifier.Text,
+            recordName,
             members.Select(PropertyInfo.Create),
             usePrivateConstructor));
 
         var namespaceDeclaration =
-            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace.Name.ToString()))
+            SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
                 .AddMembers(record);
 
         var unit = SyntaxFactory.CompilationUnit()
             .AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")))
             .AddMembers(namespaceDeclaration);
 
-        return (unit.NormalizeWhitespace().ToFullString(), @namespace.Name.ToString(), syntax.Identifier.ToString());
+        return (unit.NormalizeWhitespace().ToFullString(), namespaceName, recordName);
     }
 
         /// <summary>Create a constructor taking a list of parameters
