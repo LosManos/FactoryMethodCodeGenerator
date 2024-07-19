@@ -49,13 +49,6 @@ internal partial class SourceCodeBuilder
         return SyntaxTriviaList.Create(SyntaxFactory.SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, "// "+ comment));
     }
 
-    private static BaseNamespaceDeclarationSyntax GetNameSpace(TypeDeclarationSyntax syntax)
-    {
-        return syntax.Ancestors()
-           .OfType<BaseNamespaceDeclarationSyntax>()
-           .First();
-    }
-
     /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarch/
     /// determine the namespace the class/enum/struct is declared in, if any
     /// </summary>
@@ -101,13 +94,6 @@ internal partial class SourceCodeBuilder
 
         // return the final namespace
         return nameSpace;
-    }
-
-    private static IEnumerable<PropertyDeclarationSyntax> GetProperties(TypeDeclarationSyntax syntax)
-    {
-        return syntax.Members
-            .Where(m => m is not null)
-            .Cast<PropertyDeclarationSyntax>();
     }
 
     /// <summary>Get the flag UsePrivateConstructor from DtoAttribute.

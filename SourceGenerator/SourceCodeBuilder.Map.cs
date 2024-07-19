@@ -21,7 +21,7 @@ internal partial class SourceCodeBuilder
         (SourceProductionContext _, SemanticModel semanticModel) context,
         RecordDeclarationSyntax syntax)
     {
-        var @namespace = GetNameSpace(syntax).Name.ToString();
+        var @namespace = SyntaxHelper.GetNameSpace(syntax).Name.ToString();
 
         var mappingInfo = GetMappingInformation(syntax);
 

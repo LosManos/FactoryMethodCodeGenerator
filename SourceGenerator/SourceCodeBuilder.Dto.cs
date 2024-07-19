@@ -20,8 +20,8 @@ internal partial class SourceCodeBuilder
         SourceProductionContext _,
         ClassDeclarationSyntax syntax)
     {
-        var @namespace = GetNameSpace(syntax);
-        var members = GetProperties(syntax);
+        var @namespace = SyntaxHelper.GetNameSpace(syntax);
+        var members = SyntaxHelper.GetProperties(syntax);
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
 
         var @class = CreateDtoClass(RecordOrClassInfo.Create(
@@ -68,8 +68,8 @@ internal partial class SourceCodeBuilder
         SourceProductionContext _,
         RecordDeclarationSyntax syntax)
     {
-        var @namespace = GetNameSpace(syntax);
-        var members = GetProperties(syntax);
+        var @namespace = SyntaxHelper.GetNameSpace(syntax);
+        var members = SyntaxHelper.GetProperties(syntax);
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
 
         var record = CreateDtoRecord(RecordOrClassInfo.Create(
