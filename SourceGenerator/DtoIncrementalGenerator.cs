@@ -38,20 +38,32 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
-            static (spc, syntax) => ExecuteClass(spc, syntax));
+            static (spc, syntax) => ExecuteDtoClass(spc, syntax));
         context.RegisterSourceOutput(recordSyntaxProvider,
-            static (spc, syntax) => ExecuteRecord(spc, syntax));
+            static (spc, syntax) => ExecuteDtoRecord(spc, syntax));
         context.RegisterSourceOutput(mapSyntaxProvider,
-            static (spc, x) => ExecuteMapRecord((spc, x.SemanticModel), x.Node));
+            static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    static void ExecuteClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
+    private static void ExecuteDtoClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
-        var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildDtoClass(spc, syntax);
+        var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
+
+        var sourceCode =
+            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
+            dtoSources.source;
+        var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
+        spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
+    }
+
+    private static void ExecuteDtoRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
+    {
+        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+
+        var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
         var sourceCode =
             "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
@@ -62,26 +74,12 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteMapRecord((SourceProductionContext spc, SemanticModel semanticModel) context, RecordDeclarationSyntax syntax)
     {
-        var dtoSources = SourceCodeBuilder.BuildMapRecord(context, syntax);
+        var dtoSources = SourceCodeBuilderMap.BuildMapRecord(context, syntax);
 
         var sourceCode =
             "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
             dtoSources.source;
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         context.spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
-    }
-
-    private static void ExecuteRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
-    {
-        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
-
-        var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildDtoRecord(spc, syntax);
-
-        var sourceCode =
-            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
-            dtoSources.source;
-        var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
-        spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 }
