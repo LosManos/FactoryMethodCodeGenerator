@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MyInterface;
 
 namespace SourceGenerator;
 
@@ -166,5 +167,34 @@ internal partial class SourceCodeBuilder
             .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
             .AddMembers(constructor, factoryMethod);
         return res;
+    }
+
+    /// <summary>Get the flag UsePrivateConstructor from DtoAttribute.
+    /// Ugly code; yes I know.
+    /// </summary>
+    private static bool GetUsePrivateConstructor(SyntaxList<AttributeListSyntax> attribList)
+    {
+        var attributeName = nameof(DtoAttribute); // DtoAttribute;
+        var attributeNames = new[] { attributeName, attributeName.Replace("Attribute", "") };
+
+        var usePrivateConstructorFieldName = nameof(DtoAttribute.UsePrivateConstructor);
+
+        var attribute = attribList.SelectMany(als =>
+                als.Attributes.Where(y => attributeNames.Contains(y.Name.ToString())))
+            .Single();
+
+        var usePrivateConstructorArgument =
+            attribute.ArgumentList?.Arguments.FirstOrDefault(a =>
+                a?.NameEquals?.Name.ToString() == usePrivateConstructorFieldName);
+
+        if (usePrivateConstructorArgument is null)
+        {
+            return true;
+        }
+
+        // Get the argument value (i.e. the parameter) and try to get the value out of it.
+        // If we cannot - return default value (true).
+        var valueAsString = usePrivateConstructorArgument.Expression.NormalizeWhitespace().ToString();
+        return !bool.TryParse(valueAsString, out var usePrivateConstructorValue) || usePrivateConstructorValue;
     }
 }

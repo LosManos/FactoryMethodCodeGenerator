@@ -22,8 +22,10 @@ internal partial class SourceCodeBuilder
         RecordDeclarationSyntax syntax)
     {
         var namespaceName = SyntaxHelper.GetNameSpaceName(syntax);
-
-        var mappingInfo = GetMappingInformation(syntax);
+        // The name of the record containing the mapping methods.
+        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
+        var recordName = SyntaxHelper.GetRecordNameString(syntax);
+        var mappingInfo = GetMappingInformation(recordName, syntax.AttributeLists.GetMapAttributes());
 
         // The name of the parameter for the mapping function.
         // E.g.: `Source_To_Target(Source source)` where this is "source".
@@ -51,11 +53,6 @@ internal partial class SourceCodeBuilder
                 }
             );
 
-        // The name of the record containing the mapping methods.
-        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
-        var recordName = mappingInfo.RecordName
-            ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
-
         var record = CreateMapRecord(recordName, methods);
 
         var namespaceDeclaration =
@@ -66,7 +63,7 @@ internal partial class SourceCodeBuilder
             .AddUsings(UsingDirective(ParseName("System")))
             .AddMembers(namespaceDeclaration);
 
-        return (unit.NormalizeWhitespace().ToFullString(), namespaceName, syntax.Identifier.ToString());
+        return (unit.NormalizeWhitespace().ToFullString(), namespaceName, recordName);
     }
 
     /// <summary>Creates the record containing the mapping methods.
@@ -93,19 +90,15 @@ internal partial class SourceCodeBuilder
             .AddMembers(methods.ToArray());
     }
 
-    private static MappingInfos GetMappingInformation(RecordDeclarationSyntax syntax)
+    private static MappingInfos GetMappingInformation(string recordName, IEnumerable<AttributeSyntax> attributes)
     {
-        var mapAttributes = syntax.AttributeLists.GetMapAttributes()
+        var mapAttributes = attributes.GetMapAttributes()
             .Select(a => (
                 // Name of the attribute. Something line `Map<SourceType,TargetType>`.
                 sourceTypeName: GetMappingSourceTypeName(a.Name),
                 targetTypeName: GetMappingTargetTypeName(a.Name),
                 sourceType: a.ArgumentList?.Arguments.Skip(1).First())
             );
-        // The name of the record containing the mapping methods.
-        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
-        var recordName = syntax.Identifier.Text
-            ?? throw new Exception("Source generation error. The syntax identifier does not have a name."); // This should not happen IRL.
 
         return MappingInfos.Create(
             recordName,

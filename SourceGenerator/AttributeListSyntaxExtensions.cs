@@ -39,13 +39,20 @@ static class AttributeListSyntaxExtensions
         return hasMapAttribute;
     }
 
-    public static IEnumerable<AttributeSyntax> GetMapAttributes(this SyntaxList<AttributeListSyntax> me)
+    internal static IEnumerable<AttributeSyntax> GetMapAttributes(this IEnumerable<AttributeSyntax> attributes)
     {
         // Get the Map attribute.
         // We use a string to compare against and that is a recipe for disaster
         // as there can be many attributes with said name. Feel free to make a more clever solution.
-        return me
-            .SelectMany(x => x.Attributes)
+        return attributes
             .Where(a => (a.Name as GenericNameSyntax)?.Identifier.Text == "Map");
+    }
+
+    internal static IEnumerable<AttributeSyntax> GetMapAttributes(this SyntaxList<AttributeListSyntax> attributes)
+    {
+        // Get the Map attribute.
+        // We use a string to compare against and that is a recipe for disaster
+        // as there can be many attributes with said name. Feel free to make a more clever solution.
+        return GetMapAttributes(attributes.SelectMany(x => x.Attributes));
     }
 }
