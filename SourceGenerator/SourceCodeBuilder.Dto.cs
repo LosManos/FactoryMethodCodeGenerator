@@ -26,7 +26,7 @@ internal static class SourceCodeBuilderDto
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
         var className = syntax.Identifier.Text;
 
-        var @class = CreateDtoClass(RecordOrClassInfo.Create(
+        var @class = CreateDtoClass(ClassInfo.Create(
             className,
             members.Select(PropertyInfo.Create),
             usePrivateConstructor));
@@ -42,7 +42,7 @@ internal static class SourceCodeBuilderDto
         return (unit.NormalizeWhitespace().ToFullString(), nameSpaceName, className);
     }
 
-    private static ClassDeclarationSyntax CreateDtoClass(RecordOrClassInfo recordOrClassInfo)
+    private static ClassDeclarationSyntax CreateDtoClass(ClassInfo recordOrClassInfo)
     {
         var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
         var constructor = CreateDtoConstructor(constructorInfo);
@@ -75,7 +75,7 @@ internal static class SourceCodeBuilderDto
         var usePrivateConstructor = GetUsePrivateConstructor(syntax.AttributeLists);
         var recordName = syntax.Identifier.Text;
 
-        var record = CreateDtoRecord(RecordOrClassInfo.Create(
+        var record = CreateDtoRecord(RecordInfo.Create(
             recordName,
             members.Select(PropertyInfo.Create),
             usePrivateConstructor));
@@ -145,7 +145,7 @@ internal static class SourceCodeBuilderDto
         return ret;
     }
 
-    private static RecordDeclarationSyntax CreateDtoRecord(RecordOrClassInfo recordOrClassInfo)
+    private static RecordDeclarationSyntax CreateDtoRecord(RecordInfo recordOrClassInfo)
     {
         var propertiesAsString = string.Join(",", recordOrClassInfo.Properties.Select(p => p.Text));
 
