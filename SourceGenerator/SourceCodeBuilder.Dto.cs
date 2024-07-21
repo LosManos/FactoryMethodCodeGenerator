@@ -5,7 +5,7 @@ using MyInterface;
 
 namespace SourceGenerator;
 
-internal partial class SourceCodeBuilder
+internal static class SourceCodeBuilderDto
 {
     /// <summary>Creates a DTO class.
     ///
@@ -17,7 +17,7 @@ internal partial class SourceCodeBuilder
     /// <param name="_"></param>
     /// <param name="syntax"></param>
     /// <returns></returns>
-    public ( string source, string namespaceName, string recordName) BuildDtoClass(
+    public static ( string source, string namespaceName, string recordName) BuildDtoClass(
         SourceProductionContext _,
         ClassDeclarationSyntax syntax)
     {
@@ -42,7 +42,7 @@ internal partial class SourceCodeBuilder
         return (unit.NormalizeWhitespace().ToFullString(), nameSpaceName, className);
     }
 
-    private ClassDeclarationSyntax CreateDtoClass(RecordOrClassInfo recordOrClassInfo)
+    private static ClassDeclarationSyntax CreateDtoClass(RecordOrClassInfo recordOrClassInfo)
     {
         var constructorInfo = ConstructorInfo.Create(recordOrClassInfo.Name, recordOrClassInfo.Properties, recordOrClassInfo.IsPrivateConstructor);
         var constructor = CreateDtoConstructor(constructorInfo);
@@ -66,7 +66,7 @@ internal partial class SourceCodeBuilder
     /// <param name="_"></param>
     /// <param name="syntax"></param>
     /// <returns></returns>
-    public (string source, string namespaceName, string recordName) BuildDtoRecord(
+    internal static(string source, string namespaceName, string recordName) BuildDtoRecord(
         SourceProductionContext _,
         RecordDeclarationSyntax syntax)
     {
@@ -102,7 +102,7 @@ internal partial class SourceCodeBuilder
             ? SyntaxKind.PrivateKeyword
             : SyntaxKind.PublicKeyword));
 
-        var parameters = CreateParameterList(constructorInfo.Properties);
+        var parameters = SourceCodeBuilder.CreateParameterList(constructorInfo.Properties);
 
         var body = SyntaxFactory.Block(constructorInfo.Properties.Select(propertyInfo =>
             // Assignment. E.g.: this.MyProperty = MyProperty;
@@ -125,8 +125,8 @@ internal partial class SourceCodeBuilder
             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
             SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-        var parameters = CreateParameterList(constructorInfo.Properties);
-        var arguments = CreateArgumentList(constructorInfo.Properties);
+        var parameters = SourceCodeBuilder.CreateParameterList(constructorInfo.Properties);
+        var arguments = SourceCodeBuilder.CreateArgumentList(constructorInfo.Properties);
 
         var body = SyntaxFactory.Block(
             // Return. E.g.: return new MyDto(a,b,c);
@@ -162,7 +162,7 @@ internal partial class SourceCodeBuilder
             .WithModifiers(SyntaxTokenList.Create(
                 SyntaxFactory.Token(SyntaxKind.PartialKeyword)
             ))
-            .WithLeadingTrivia(CreateSingleLineComment($"Properties: {propertiesAsString}"))
+            .WithLeadingTrivia(SourceCodeBuilder.CreateSingleLineComment($"Properties: {propertiesAsString}"))
             .WithOpenBraceToken(SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
             .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken))
             .AddMembers(constructor, factoryMethod);

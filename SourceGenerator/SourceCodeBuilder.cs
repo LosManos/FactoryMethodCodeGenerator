@@ -5,14 +5,9 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace SourceGenerator;
 
-internal partial class SourceCodeBuilder
+internal static class SourceCodeBuilder
 {
-    private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
-    {
-        return Argument(IdentifierName(propertyInfo.Name));
-    }
-
-    private static ArgumentListSyntax CreateArgumentList(IEnumerable<PropertyInfo> propertyInfos)
+    internal static ArgumentListSyntax CreateArgumentList(IEnumerable<PropertyInfo> propertyInfos)
     {
         var arguments = ArgumentList();
         foreach (var propertyInfo in propertyInfos)
@@ -27,13 +22,13 @@ internal partial class SourceCodeBuilder
     //     return SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpaceName)).NormalizeWhitespace();
     // }
 
-    private static ParameterSyntax CreateParameter(PropertyInfo propertyInfo)
+    internal static ParameterSyntax CreateParameter(PropertyInfo propertyInfo)
     {
         return Parameter(Identifier(propertyInfo.Name))
             .WithType(propertyInfo.Type);
     }
 
-    private static ParameterListSyntax CreateParameterList(IEnumerable<PropertyInfo> propertyInfos)
+    internal static ParameterListSyntax CreateParameterList(IEnumerable<PropertyInfo> propertyInfos)
     {
         var parameters = ParameterList();
         foreach (var propertyInfo in propertyInfos)
@@ -43,10 +38,15 @@ internal partial class SourceCodeBuilder
         return parameters;
     }
 
-    private static SyntaxTriviaList CreateSingleLineComment(string comment)
+    internal static SyntaxTriviaList CreateSingleLineComment(string comment)
     {
         // Future: Here is how to write xml comment. https://stackoverflow.com/questions/30695752/how-do-i-add-an-xml-doc-comment-to-a-classdeclarationsyntax-in-roslyn
         return SyntaxTriviaList.Create(SyntaxTrivia(SyntaxKind.SingleLineCommentTrivia, "// "+ comment));
+    }
+
+    private static ArgumentSyntax CreateArgument(PropertyInfo propertyInfo)
+    {
+        return Argument(IdentifierName(propertyInfo.Name));
     }
 
     // /// <summary> Copied with pride from https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarch/

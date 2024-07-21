@@ -5,7 +5,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace SourceGenerator;
 
-internal partial class SourceCodeBuilder
+internal static class SourceCodeBuilderMap
 {
     /// <summary>Creates a method for copying all data from one class to another.
     ///
@@ -142,7 +142,7 @@ internal partial class SourceCodeBuilder
     {
         return ParameterList()
             .AddParameters(
-                CreateParameter(
+                SourceCodeBuilder.CreateParameter(
                     PropertyInfo.Create(
                         sourceParameterName,
                         IdentifierName(Identifier(sourceTypeName)),

@@ -50,8 +50,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         // Bail early if we are not interested.
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
-        var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildDtoClass(spc, syntax);
+        var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
         var sourceCode =
             "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
@@ -64,8 +63,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
-        var sourceBuilder = new SourceCodeBuilder();
-        var dtoSources = sourceBuilder.BuildDtoRecord(spc, syntax);
+        var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
         var sourceCode =
             "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
@@ -76,7 +74,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteMapRecord((SourceProductionContext spc, SemanticModel semanticModel) context, RecordDeclarationSyntax syntax)
     {
-        var dtoSources = SourceCodeBuilder.BuildMapRecord(context, syntax);
+        var dtoSources = SourceCodeBuilderMap.BuildMapRecord(context, syntax);
 
         var sourceCode =
             "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
