@@ -47,18 +47,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
     {
-        var dtoAttributeType = model.Compilation.GetTypeByMetadataName("MyInterface.DtoAttribute")
-                               ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
-        var attributes = syntax.AttributeLists
-            .SelectMany(attrList => attrList.Attributes);
-
-        var attributeSymbols = attributes
-            .Select(asx =>
-                model.GetSymbolInfo(asx).Symbol?.ContainingType)
-            .Where(x => x is not null)
-            .Select(x => x!);
-
         // Bail early if we are not interested.
+        var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
+        var attributeSymbols = GetAttributeSymbols(model, syntax);
         if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
             return;
 
@@ -73,18 +64,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteDtoRecord(SourceProductionContext spc,SemanticModel model, RecordDeclarationSyntax syntax)
     {
-        var dtoAttributeType = model.Compilation.GetTypeByMetadataName("MyInterface.DtoAttribute")
-                               ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
-        var attributes = syntax.AttributeLists
-            .SelectMany(attrList => attrList.Attributes);
-
-        var attributeSymbols = attributes
-            .Select(asx =>
-                model.GetSymbolInfo(asx).Symbol?.ContainingType)
-            .Where(x => x != null)
-            .Select(x => x!);
-
         // Bail early if we are not interested.
+        var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
+        var attributeSymbols = GetAttributeSymbols(model, syntax);
         if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
             return;
 
@@ -106,5 +88,18 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             dtoSources.source;
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         context.spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
+    }
+
+    private static IEnumerable<INamedTypeSymbol> GetAttributeSymbols(SemanticModel model, TypeDeclarationSyntax syntax)
+    {
+        var attributes = syntax.AttributeLists
+            .SelectMany(attrList => attrList.Attributes);
+
+        var attributeSymbols = attributes
+            .Select(asx =>
+                model.GetSymbolInfo(asx).Symbol?.ContainingType)
+            .Where(x => x != null)
+            .Select(x => x!);
+        return attributeSymbols;
     }
 }
