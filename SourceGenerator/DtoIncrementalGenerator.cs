@@ -17,15 +17,15 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
                 predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 },
-                transform: (ctx, _) => (ClassDeclarationSyntax)ctx.Node)
-            .Where(static m => m is not null);
+                transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
+            .Where(static m => m.Node is not null);
 
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
                 // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
                 predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
-                transform: (ctx, _) => (RecordDeclarationSyntax)ctx.Node)
-            .Where(static m => m is not null);
+                transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
+            .Where(static m => m.Node is not null);
 
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -38,17 +38,29 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
-            static (spc, syntax) => ExecuteDtoClass(spc, syntax));
+            static (spc, syntax) => ExecuteDtoClass(spc, syntax.SemanticModel, syntax.Node));
         context.RegisterSourceOutput(recordSyntaxProvider,
-            static (spc, syntax) => ExecuteDtoRecord(spc, syntax));
+            static (spc, syntax) => ExecuteDtoRecord(spc, syntax.SemanticModel, syntax.Node));
         context.RegisterSourceOutput(mapSyntaxProvider,
             static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    private static void ExecuteDtoClass(SourceProductionContext spc, ClassDeclarationSyntax syntax)
+    private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
-        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+        // if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+        var dtoAttributeType = model.Compilation.GetTypeByMetadataName("MyInterface.DtoAttribute")
+                               ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
+        var attributes = syntax.AttributeLists
+            .SelectMany(attrList => attrList.Attributes);
+        // throw new Exception($"### attributes.count={attributes.Count()}");
+
+        IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
+            .Select(asx =>
+                model.GetSymbolInfo(asx).Symbol?.ContainingType)
+            .Where(x => x is not null);
+
+        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false) return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
@@ -59,8 +71,21 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 
-    private static void ExecuteDtoRecord(SourceProductionContext spc, RecordDeclarationSyntax syntax)
+    private static void ExecuteDtoRecord(SourceProductionContext spc,SemanticModel model, RecordDeclarationSyntax syntax)
     {
+        var dtoAttributeType = model.Compilation.GetTypeByMetadataName("MyInterface.DtoAttribute")
+                               ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
+        var attributes = syntax.AttributeLists
+            .SelectMany(attrList => attrList.Attributes);
+        // throw new Exception($"### attributes.count={attributes.Count()}");
+
+        IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
+            .Select(asx =>
+                model.GetSymbolInfo(asx).Symbol?.ContainingType)
+            .Where(x => x is not null);
+
+        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false) return;
+
         if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
