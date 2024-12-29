@@ -50,7 +50,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         // Bail early if we are not interested.
         var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
+        if (DtoAttributeHelper.HasGetDtoAttribute(attributeSymbols, dtoAttributeType) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
@@ -67,7 +67,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         // Bail early if we are not interested.
         var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
+        if (DtoAttributeHelper.HasGetDtoAttribute(attributeSymbols, dtoAttributeType) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
