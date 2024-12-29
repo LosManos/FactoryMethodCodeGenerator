@@ -11,19 +11,8 @@ internal static class Extensions
         INamedTypeSymbol dtoAttributeType,
         out INamedTypeSymbol? result)
     {
-        var res = syntax.GetDtoAttributeSymbolOrNull(attributeSymbols, attributes, dtoAttributeType);
-        if (res is null)
-        {
-            // We cannot use [NotNullWhen(b)] as we are not running DotnetStandard 2.1.
-            // Alas, we have to set the `result`.
-            result = null;
-            return false;
-        }
-        else
-        {
-            result = res;
-            return true;
-        }
+        result = syntax.GetDtoAttributeSymbolOrNull(attributeSymbols, attributes, dtoAttributeType);
+        return result is not null;
     }
 
     private static INamedTypeSymbol? GetDtoAttributeSymbolOrNull(this TypeDeclarationSyntax syntax,
