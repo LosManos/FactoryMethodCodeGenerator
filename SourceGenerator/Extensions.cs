@@ -7,17 +7,15 @@ internal static class Extensions
 {
     internal static bool TryGetDtoAttribute(this TypeDeclarationSyntax syntax,
         IEnumerable<INamedTypeSymbol> attributeSymbols,
-        IEnumerable<AttributeSyntax> attributes,
         INamedTypeSymbol dtoAttributeType,
         out INamedTypeSymbol? result)
     {
-        result = syntax.GetDtoAttributeSymbolOrNull(attributeSymbols, attributes, dtoAttributeType);
+        result = syntax.GetDtoAttributeSymbolOrNull(attributeSymbols, dtoAttributeType);
         return result is not null;
     }
 
     private static INamedTypeSymbol? GetDtoAttributeSymbolOrNull(this TypeDeclarationSyntax syntax,
         IEnumerable<INamedTypeSymbol> attributeSymbols,
-        IEnumerable<AttributeSyntax> attributes,
         INamedTypeSymbol dtoAttributeType)
     {
         var validAttribute =

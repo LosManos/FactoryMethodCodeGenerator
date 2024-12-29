@@ -52,13 +52,14 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var attributes = syntax.AttributeLists
             .SelectMany(attrList => attrList.Attributes);
 
-        IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
+        var attributeSymbols = attributes
             .Select(asx =>
                 model.GetSymbolInfo(asx).Symbol?.ContainingType)
-            .Where(x => x is not null);
+            .Where(x => x is not null)
+            .Select(x => x!);
 
         // Bail early if we are not interested.
-        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false)
+        if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
@@ -77,13 +78,14 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         var attributes = syntax.AttributeLists
             .SelectMany(attrList => attrList.Attributes);
 
-        IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
+        var attributeSymbols = attributes
             .Select(asx =>
                 model.GetSymbolInfo(asx).Symbol?.ContainingType)
-            .Where(x => x is not null);
+            .Where(x => x != null)
+            .Select(x => x!);
 
         // Bail early if we are not interested.
-        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false)
+        if (syntax.TryGetDtoAttribute(attributeSymbols, dtoAttributeType, out _) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
