@@ -20,9 +20,33 @@ internal static class ModelExtensions
     /// <param name="model">The model to search in.</param>
     /// <returns>The type of the DtoAttribute</returns>
     /// <exception cref="Exception">Thrown if the type is not found.</exception>
-    internal static INamedTypeSymbol GetDtoAttributeType(this SemanticModel model)
+    private static INamedTypeSymbol GetDtoAttributeType(this SemanticModel model)
     {
         return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
                ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
+    }
+
+    /// <summary>Returns whether the model contains the DtoAttribute somewhere.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <param name="attributeSymbols"></param>
+    /// <returns>True if the model contains the DtoAttribute somewhere; false otherwise.</returns>
+    internal static bool HasGetDtoAttribute(
+        this SemanticModel model,
+        IEnumerable<INamedTypeSymbol> attributeSymbols)
+    {
+        var dtoAttributeType = model.GetDtoAttributeType();
+
+        return GetDtoAttributeSymbolOrNull(dtoAttributeType, attributeSymbols) is not null;
+    }
+
+    private static INamedTypeSymbol? GetDtoAttributeSymbolOrNull(
+        INamedTypeSymbol dtoAttributeType,
+        IEnumerable<INamedTypeSymbol> attributeSymbols)
+    {
+        var validAttribute =
+            attributeSymbols.FirstOrDefault(asym =>
+                asym.ToDisplayString() == dtoAttributeType.ToDisplayString());
+        return validAttribute;
     }
 }

@@ -49,7 +49,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         // Bail early if we are not interested.
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (DtoAttributeHelper.HasGetDtoAttribute(model, attributeSymbols) == false)
+        if (model.HasGetDtoAttribute(attributeSymbols) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
@@ -65,7 +65,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         // Bail early if we are not interested.
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (DtoAttributeHelper.HasGetDtoAttribute(model, attributeSymbols) == false)
+        if (model.HasGetDtoAttribute(attributeSymbols) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
@@ -88,7 +88,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
         context.spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
 
-    private static IEnumerable<INamedTypeSymbol> GetAttributeSymbols(SemanticModel model, TypeDeclarationSyntax syntax)
+    private static IEnumerable<INamedTypeSymbol> GetAttributeSymbols(
+        SemanticModel model,
+        TypeDeclarationSyntax syntax)
     {
         var attributes = syntax.AttributeLists
             .SelectMany(attrList => attrList.Attributes);
