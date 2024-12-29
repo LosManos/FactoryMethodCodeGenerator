@@ -47,20 +47,19 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
     {
-        // Bail early if we are not interested.
-        // if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
         var dtoAttributeType = model.Compilation.GetTypeByMetadataName("MyInterface.DtoAttribute")
                                ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
         var attributes = syntax.AttributeLists
             .SelectMany(attrList => attrList.Attributes);
-        // throw new Exception($"### attributes.count={attributes.Count()}");
 
         IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
             .Select(asx =>
                 model.GetSymbolInfo(asx).Symbol?.ContainingType)
             .Where(x => x is not null);
 
-        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false) return;
+        // Bail early if we are not interested.
+        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false)
+            return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
@@ -77,16 +76,15 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                                ?? throw new Exception("FactoryMethodCodeGenerator - Could not find DtoAttribute");
         var attributes = syntax.AttributeLists
             .SelectMany(attrList => attrList.Attributes);
-        // throw new Exception($"### attributes.count={attributes.Count()}");
 
         IEnumerable<INamedTypeSymbol> attributeSymbols = attributes
             .Select(asx =>
                 model.GetSymbolInfo(asx).Symbol?.ContainingType)
             .Where(x => x is not null);
 
-        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false) return;
-
-        if (syntax.TryGetDtoAttributeOrNull(out _) == false) return;
+        // Bail early if we are not interested.
+        if (syntax.TryGetDtoAttribute(attributeSymbols, attributes, dtoAttributeType, out _) == false)
+            return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
