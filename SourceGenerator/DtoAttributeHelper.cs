@@ -2,15 +2,11 @@ using Microsoft.CodeAnalysis;
 
 namespace SourceGenerator;
 
+/// <summary>This class contains helper functions for the DtoAttribute.
+/// </summary>
 internal static class DtoAttributeHelper
 {
     private const string DtoAttributeMetadataName = "MyInterface.DtoAttribute";
-
-    internal static INamedTypeSymbol GetDtoAttributeType(SemanticModel model)
-    {
-        return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
-            ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
-    }
 
     internal static bool HasGetDtoAttribute(
         SemanticModel model,
@@ -29,5 +25,11 @@ internal static class DtoAttributeHelper
             attributeSymbols.FirstOrDefault(asym =>
                 asym.ToDisplayString() == dtoAttributeType.ToDisplayString());
         return validAttribute;
+    }
+
+    private static INamedTypeSymbol GetDtoAttributeType(SemanticModel model)
+    {
+        return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
+               ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
     }
 }
