@@ -6,8 +6,6 @@ namespace SourceGenerator;
 /// </summary>
 internal static class DtoAttributeHelper
 {
-    private const string DtoAttributeMetadataName = "MyInterface.DtoAttribute";
-
     internal static bool HasGetDtoAttribute(
         SemanticModel model,
         IEnumerable<INamedTypeSymbol> attributeSymbols)
@@ -19,17 +17,11 @@ internal static class DtoAttributeHelper
         SemanticModel model,
         IEnumerable<INamedTypeSymbol> attributeSymbols)
     {
-        var dtoAttributeType = GetDtoAttributeType(model);
+        var dtoAttributeType = model.GetDtoAttributeType();
 
         var validAttribute =
             attributeSymbols.FirstOrDefault(asym =>
                 asym.ToDisplayString() == dtoAttributeType.ToDisplayString());
         return validAttribute;
-    }
-
-    private static INamedTypeSymbol GetDtoAttributeType(SemanticModel model)
-    {
-        return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
-               ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
     }
 }
