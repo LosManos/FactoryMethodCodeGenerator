@@ -13,18 +13,21 @@ internal static class DtoAttributeHelper
     }
 
     internal static bool HasGetDtoAttribute(
-        IEnumerable<INamedTypeSymbol> attributeSymbols,
-        INamedTypeSymbol dtoAttributeType)
+        SemanticModel model,
+        IEnumerable<INamedTypeSymbol> attributeSymbols)
     {
-        return GetDtoAttributeSymbolOrNull(attributeSymbols, dtoAttributeType) is not null;
+        return GetDtoAttributeSymbolOrNull(model, attributeSymbols) is not null;
     }
 
     private static INamedTypeSymbol? GetDtoAttributeSymbolOrNull(
-        IEnumerable<INamedTypeSymbol> attributeSymbols,
-        INamedTypeSymbol dtoAttributeType)
+        SemanticModel model,
+        IEnumerable<INamedTypeSymbol> attributeSymbols)
     {
+        var dtoAttributeType = GetDtoAttributeType(model);
+
         var validAttribute =
-            attributeSymbols.FirstOrDefault(asym => asym.ToDisplayString() == dtoAttributeType.ToDisplayString());
+            attributeSymbols.FirstOrDefault(asym =>
+                asym.ToDisplayString() == dtoAttributeType.ToDisplayString());
         return validAttribute;
     }
 }

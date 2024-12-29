@@ -48,9 +48,8 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
-        var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (DtoAttributeHelper.HasGetDtoAttribute(attributeSymbols, dtoAttributeType) == false)
+        if (DtoAttributeHelper.HasGetDtoAttribute(model, attributeSymbols) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
@@ -65,9 +64,8 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     private static void ExecuteDtoRecord(SourceProductionContext spc,SemanticModel model, RecordDeclarationSyntax syntax)
     {
         // Bail early if we are not interested.
-        var dtoAttributeType = DtoAttributeHelper.GetDtoAttributeType(model);
         var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (DtoAttributeHelper.HasGetDtoAttribute(attributeSymbols, dtoAttributeType) == false)
+        if (DtoAttributeHelper.HasGetDtoAttribute(model, attributeSymbols) == false)
             return;
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
