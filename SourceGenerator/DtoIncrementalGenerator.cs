@@ -35,7 +35,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     var semanticModel = ctx.SemanticModel;
                     return (SemanticModel: semanticModel, Node: (RecordDeclarationSyntax)ctx.Node);
                 })
-            .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
+            .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasSimplifiedMapAttribute());
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteDtoClass(spc, syntax.SemanticModel, syntax.Node));

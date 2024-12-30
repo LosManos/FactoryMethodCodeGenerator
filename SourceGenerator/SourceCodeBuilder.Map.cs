@@ -25,7 +25,7 @@ internal static class SourceCodeBuilderMap
         // The name of the record containing the mapping methods.
         // E.g.: `public abstract partial record Mapping` where this is "Mapping".
         var recordName = SyntaxHelper.GetRecordNameString(syntax);
-        var mappingInfo = GetMappingInformation(recordName, syntax.AttributeLists.GetMapAttributes());
+        var mappingInfo = GetMappingInformation(recordName, syntax.AttributeLists.GetSimplifiedMapAttributes());
 
         // The name of the parameter for the mapping function.
         // E.g.: `Source_To_Target(Source source)` where this is "source".
@@ -92,7 +92,7 @@ internal static class SourceCodeBuilderMap
 
     private static MappingInfos GetMappingInformation(string recordName, IEnumerable<AttributeSyntax> attributes)
     {
-        var mapAttributes = attributes.GetMapAttributes()
+        var mapAttributes = attributes.GetSimplifiedMapAttributes()
             .Select(a => (
                 // Name of the attribute. Something line `Map<SourceType,TargetType>`.
                 sourceTypeName: GetMappingSourceTypeName(a.Name),

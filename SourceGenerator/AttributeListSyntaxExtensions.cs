@@ -5,6 +5,8 @@ namespace SourceGenerator;
 
 static class AttributeListSyntaxExtensions
 {
+    private const string SimplifiedMapAttributeName = "Map";
+
     /// <summary>Copied with pride from
     /// https://stackoverflow.com/a/73868033/521554
     /// </summary>
@@ -28,31 +30,59 @@ static class AttributeListSyntaxExtensions
         return ret;
     }
 
-    public static bool HasMapAttribute(this SyntaxList<AttributeListSyntax> me)
+    #region MapAttribute methods.
+
+    /// <summary>Returns whether an attribute list has at least one MapAttribute.
+    /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
+    /// <remarks>
+    /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// </summary>
+    /// <param name="me"></param>
+    /// <returns></returns>
+    internal static bool HasSimplifiedMapAttribute(this SyntaxList<AttributeListSyntax> me)
     {
         // Get the Map attribute.
         // We use a string to compare against and that is a recipe for disaster
         // as there can be many attributes with said name. Feel free to make a more clever solution.
         var hasMapAttribute = me
             .SelectMany(x => x.Attributes)
-            .Any(a => (a.Name as GenericNameSyntax)?.Identifier.Text == "Map");
+            .Any(a => (a.Name as GenericNameSyntax)?.Identifier.Text == SimplifiedMapAttributeName);
         return hasMapAttribute;
     }
 
-    internal static IEnumerable<AttributeSyntax> GetMapAttributes(this IEnumerable<AttributeSyntax> attributes)
+    /// <summary>Gets all Map attributes for a list of attributes.
+    /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
+    /// <remarks>
+    /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// </summary>
+    /// <param name="attributes"></param>
+    /// <returns></returns>
+    internal static IEnumerable<AttributeSyntax> GetSimplifiedMapAttributes(this IEnumerable<AttributeSyntax> attributes)
     {
         // Get the Map attribute.
         // We use a string to compare against and that is a recipe for disaster
         // as there can be many attributes with said name. Feel free to make a more clever solution.
         return attributes
-            .Where(a => (a.Name as GenericNameSyntax)?.Identifier.Text == "Map");
+            .Where(a => (a.Name as GenericNameSyntax)?.Identifier.Text == SimplifiedMapAttributeName);
     }
 
-    internal static IEnumerable<AttributeSyntax> GetMapAttributes(this SyntaxList<AttributeListSyntax> attributes)
+    /// <summary>Gets all Map attributes for a list of attributes.
+    /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
+    /// <remarks>
+    /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// </summary>
+    /// <param name="attributes"></param>
+    /// <returns></returns>
+    internal static IEnumerable<AttributeSyntax> GetSimplifiedMapAttributes(this SyntaxList<AttributeListSyntax> attributes)
     {
         // Get the Map attribute.
         // We use a string to compare against and that is a recipe for disaster
         // as there can be many attributes with said name. Feel free to make a more clever solution.
-        return GetMapAttributes(attributes.SelectMany(x => x.Attributes));
+        return GetSimplifiedMapAttributes(attributes.SelectMany(x => x.Attributes));
     }
+
+    #endregion
 }
