@@ -54,9 +54,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
-        var sourceCode =
-            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
-            dtoSources.source;
+        var sourceCode = CreateSourceCode(dtoSources);
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
@@ -70,9 +68,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
-        var sourceCode =
-            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
-            dtoSources.source;
+        var sourceCode = CreateSourceCode(dtoSources);
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
@@ -81,9 +77,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         var dtoSources = SourceCodeBuilderMap.BuildMapRecord(context, syntax);
 
-        var sourceCode =
-            "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
-            dtoSources.source;
+        var sourceCode = CreateSourceCode(dtoSources);
         var fileName = $"{dtoSources.namespaceName}.{dtoSources.recordName}.g.cs";
         context.spc.AddSource(fileName, SourceText.From(sourceCode, Encoding.UTF8));
     }
@@ -101,5 +95,11 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             .Where(x => x != null)
             .Select(x => x!);
         return attributeSymbols;
+    }
+
+    private static string CreateSourceCode((string source, string namespaceName, string recordName) dtoSources)
+    {
+        return "// Automagically built at: " + DateTime.UtcNow.ToString("u") + $" by {nameof(DtoIncrementalGenerator)}\n\n" +
+               dtoSources.source;
     }
 }
