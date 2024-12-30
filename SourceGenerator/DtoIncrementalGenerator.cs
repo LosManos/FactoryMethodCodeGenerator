@@ -31,13 +31,11 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
-                transform: (ctx, _) =>
-                {
-                    var semanticModel = ctx.SemanticModel;
-                    return (SemanticModel: semanticModel, Node: (RecordDeclarationSyntax)ctx.Node);
-                })
-            .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasSimplifiedMapAttribute());
+                predicate: (node, _) =>
+                    node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedMapAttribute(),
+                transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
+            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteDtoClass(spc, syntax.SemanticModel, syntax.Node));
