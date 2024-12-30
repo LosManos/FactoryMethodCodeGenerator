@@ -14,18 +14,6 @@ internal static class ModelExtensions
     /// </summary>
     private const string DtoAttributeMetadataName = "MyInterface.DtoAttribute";
 
-    /// <summary>Returns the DtoAttribute type.
-    /// If not found it throws an exception.
-    /// </summary>
-    /// <param name="model">The model to search in.</param>
-    /// <returns>The type of the DtoAttribute</returns>
-    /// <exception cref="Exception">Thrown if the type is not found.</exception>
-    private static INamedTypeSymbol GetDtoAttributeType(this SemanticModel model)
-    {
-        return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
-               ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
-    }
-
     /// <summary>Returns whether the model contains the DtoAttribute somewhere.
     /// </summary>
     /// <param name="model"></param>
@@ -38,6 +26,18 @@ internal static class ModelExtensions
         var dtoAttributeType = model.GetDtoAttributeType();
 
         return GetDtoAttributeSymbolOrNull(dtoAttributeType, attributeSymbols) is not null;
+    }
+
+    /// <summary>Returns the DtoAttribute type.
+    /// If not found it throws an exception.
+    /// </summary>
+    /// <param name="model">The model to search in.</param>
+    /// <returns>The type of the DtoAttribute</returns>
+    /// <exception cref="Exception">Thrown if the type is not found.</exception>
+    private static INamedTypeSymbol GetDtoAttributeType(this SemanticModel model)
+    {
+        return model.Compilation.GetTypeByMetadataName(DtoAttributeMetadataName)
+               ?? throw new Exception($"Could not find {DtoAttributeMetadataName}.");
     }
 
     private static INamedTypeSymbol? GetDtoAttributeSymbolOrNull(
