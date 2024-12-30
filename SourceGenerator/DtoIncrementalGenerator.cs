@@ -15,17 +15,19 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         var classSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
-                predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 },
+                predicate: (node, _) =>
+                    node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((ClassDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
-            .Where(static m => m.Node is not null);
+            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
 
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
-                predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
+                predicate: (node, _) =>
+                    node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
-            .Where(static m => m.Node is not null);
+            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
 
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(

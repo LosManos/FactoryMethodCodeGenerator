@@ -5,6 +5,7 @@ namespace SourceGenerator;
 
 static class AttributeListSyntaxExtensions
 {
+    private const string SimplifiedDtoAttributeName = "Dto";
     private const string SimplifiedMapAttributeName = "Map";
 
     /// <summary>Copied with pride from
@@ -30,12 +31,44 @@ static class AttributeListSyntaxExtensions
         return ret;
     }
 
+
+    #region DtoAttribute methods.
+
+    /// <summary>Returns whether an attribute list has at least one DtoAttribute.
+    /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
+    /// <remarks>
+    /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// <remarks>
+    /// Note that the DtoAttribute methods have different NameSyntax casting
+    /// that MapAttribute methods.
+    /// </remarks>
+    /// </summary>
+    /// <param name="me"></param>
+    /// <returns></returns>
+    internal static bool HasSimplifiedDtoAttribute(this SyntaxList<AttributeListSyntax> me)
+    {
+        // Get the Dto attribute.
+        // We use a string to compare against and that is a recipe for disaster
+        // as there can be many attributes with said name. Feel free to make a more clever solution.
+        var hasDtoAttribute = me
+            .SelectMany(x => x.Attributes)
+            .Any(a => (a.Name as IdentifierNameSyntax)?.Identifier.Text == SimplifiedDtoAttributeName);
+        return hasDtoAttribute;
+    }
+
+    #endregion
+
     #region MapAttribute methods.
 
     /// <summary>Returns whether an attribute list has at least one MapAttribute.
     /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
     /// <remarks>
     /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// <remarks>
+    /// Note that the DtoAttribute methods have different NameSyntax casting
+    /// that MapAttribute methods.
     /// </remarks>
     /// </summary>
     /// <param name="me"></param>
@@ -55,6 +88,10 @@ static class AttributeListSyntaxExtensions
     /// The comparison is simplified in the way that it is _not_ for the fully qualified name.
     /// <remarks>
     /// There may be false positives if there is another attribute with the same name.
+    /// </remarks>
+    /// <remarks>
+    /// Note that the DtoAttribute methods have different NameSyntax casting
+    /// that MapAttribute methods.
     /// </remarks>
     /// </summary>
     /// <param name="attributes"></param>
