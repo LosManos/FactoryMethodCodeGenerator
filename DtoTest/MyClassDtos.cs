@@ -33,6 +33,15 @@ public partial class MyClassDto_With_ExplicitPrivateConstructor
 
 public class NotAClassDto;
 
+/// <summary>This class should keep its Attribute suffix as it is the naming we test.
+/// </summary>
+// ReSharper disable once RedundantAttributeSuffix
+[DtoAttribute]
+public partial class MyClassDto_With_Metaname
+{
+    public int MyFirstValue { get; init; }
+}
+
 /// <summary>Should not get a factory method.
 /// If it does - the code will not compile as the class is not partial.
 /// Alas important it is not partial.

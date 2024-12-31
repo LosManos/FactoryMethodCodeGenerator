@@ -2,7 +2,10 @@ using MyInterface;
 
 namespace ConsoleApp1;
 
-[Dto]
+/// <summary>We this attribute `DtoAttribute`, and not the normal `Dto` as to catch both kinds when debugging.
+/// It is easier than catching flow in the source generation.
+/// </summary>
+[DtoAttribute]
 public partial record SourceType
 {
     public int Value { get; init; }

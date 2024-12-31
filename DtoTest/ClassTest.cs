@@ -51,4 +51,11 @@ public class ClassTest
         var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
         createMethod.Should().BeNull();
     }
+
+    [Fact]
+    public void AttributeMetaname()
+    {
+        _ = MyClassDto_With_Metaname.Create(1);
+        // If it compiles it works.
+    }
 }

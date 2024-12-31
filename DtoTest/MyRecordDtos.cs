@@ -33,6 +33,15 @@ public partial record MyRecordDto_With_ExplicitPrivateConstructor
 
 public record NotARecordDto;
 
+/// <summary>This class should keep its Attribute suffix as it is the naming we test.
+/// </summary>
+// ReSharper disable once RedundantAttributeSuffix
+[DtoAttribute]
+public partial record MyRecordDto_With_Metaname
+{
+    public int MyFirstValue { get; init; }
+}
+
 /// <summary>Should not get a factory method.
 /// If it does - the code will not compile as the record is not partial.
 /// Alas important it is not partial.

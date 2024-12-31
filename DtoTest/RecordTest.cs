@@ -52,4 +52,11 @@ public class RecordTest
         var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
         createMethod.Should().BeNull();
     }
+
+    [Fact]
+    public void AttributeMetaname()
+    {
+        _ = MyRecordDto_With_Metaname.Create(1);
+        // If it compiles it works.
+    }
 }
