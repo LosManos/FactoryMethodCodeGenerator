@@ -15,27 +15,36 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
     {
         var classSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
-                predicate: (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 },
+                predicate: (node, _) =>
+                    node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((ClassDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
-            .Where(static m => m.Node is not null);
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
+            .Where(static clsInfo =>
+                GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node).Any(x => x.IsDtoAttribute())
+            );
 
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                // We would prefer to filter more thoroughly here, like on the correct attribute. But such a solution eludes me. Maybe we can use the solution Map uses?
-                predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
+                predicate: (node, _) =>
+                    node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
-            .Where(static m => m.Node is not null);
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
+            .Where(static recInfo =>
+                GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node).Any(x => x.IsDtoAttribute())
+            );
 
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: (node, _) => node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 },
-                transform: (ctx, _) =>
-                {
-                    var semanticModel = ctx.SemanticModel;
-                    return (SemanticModel: semanticModel, Node: (RecordDeclarationSyntax)ctx.Node);
-                })
-            .Where(static rds => rds.Node is not null && rds.Node.AttributeLists.HasMapAttribute());
+                predicate: (node, _) =>
+                    node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
+                    && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedMapAttribute(),
+                transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
+            .Where(static recInfo =>
+                GetAttributeSymbols(recInfo.SemanticModel, recInfo.Node).Any(x => x.IsMapAttribute())
+            );
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteDtoClass(spc, syntax.SemanticModel, syntax.Node));
@@ -45,13 +54,8 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
+    private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel _, ClassDeclarationSyntax syntax)
     {
-        // Bail early if we are not interested.
-        var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (model.HasGetDtoAttribute(attributeSymbols) == false)
-            return;
-
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
         var sourceCode = CreateSourceCode(dtoSources);
@@ -61,11 +65,6 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteDtoRecord(SourceProductionContext spc,SemanticModel model, RecordDeclarationSyntax syntax)
     {
-        // Bail early if we are not interested.
-        var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (model.HasGetDtoAttribute(attributeSymbols) == false)
-            return;
-
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
         var sourceCode = CreateSourceCode(dtoSources);

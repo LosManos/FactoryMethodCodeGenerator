@@ -171,10 +171,11 @@ internal static class SourceCodeBuilderDto
 
     /// <summary>Get the flag UsePrivateConstructor from DtoAttribute.
     /// Ugly code; yes I know.
+    /// There must be caveats here.
     /// </summary>
     private static bool GetUsePrivateConstructor(SyntaxList<AttributeListSyntax> attribList)
     {
-        var attributeName = nameof(DtoAttribute); // DtoAttribute;
+        var attributeName = nameof(DtoAttribute);
         var attributeNames = new[] { attributeName, attributeName.Replace("Attribute", "") };
 
         var usePrivateConstructorFieldName = nameof(DtoAttribute.UsePrivateConstructor);
