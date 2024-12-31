@@ -19,8 +19,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((ClassDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
             .Where(static clsInfo =>
-                ModelExtensions.HasDtoAttribute(GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node))
+                GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node).Any(x => x.IsDtoAttribute())
             );
 
         var recordSyntaxProvider = context.SyntaxProvider
@@ -29,8 +30,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
             .Where(static recInfo =>
-                ModelExtensions.HasDtoAttribute(GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node))
+                GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node).Any(x => x.IsDtoAttribute())
             );
 
         var mapSyntaxProvider = context.SyntaxProvider
@@ -39,8 +41,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedMapAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
+            // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
             .Where(static recInfo =>
-                ModelExtensions.HasMapAttribute(GetAttributeSymbols(recInfo.SemanticModel, recInfo.Node))
+                GetAttributeSymbols(recInfo.SemanticModel, recInfo.Node).Any(x => x.IsMapAttribute())
             );
 
         context.RegisterSourceOutput(classSyntaxProvider,
