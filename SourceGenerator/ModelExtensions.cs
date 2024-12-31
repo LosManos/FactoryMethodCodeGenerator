@@ -14,18 +14,33 @@ internal static class ModelExtensions
     /// </summary>
     private const string DtoAttributeMetadataName = "MyInterface.DtoAttribute";
 
+    private const string MapAttributeNamespace = "MyInterface";
+    private const string MapAttributeMetadataName = "MapAttribute";
+
     /// <summary>Returns whether the model contains the DtoAttribute somewhere.
     /// </summary>
     /// <param name="model"></param>
     /// <param name="attributeSymbols"></param>
     /// <returns>True if the model contains the DtoAttribute somewhere; false otherwise.</returns>
-    internal static bool HasGetDtoAttribute(
+    internal static bool HasDtoAttribute(
         this SemanticModel model,
         IEnumerable<INamedTypeSymbol> attributeSymbols)
     {
         var dtoAttributeType = model.GetDtoAttributeType();
-
         return GetDtoAttributeSymbolOrNull(dtoAttributeType, attributeSymbols) is not null;
+    }
+
+    /// <summary>Returns whether the list contains the MapAttribute.
+    /// </summary>
+    /// <param name="attributeSymbols"></param>
+    /// <returns>True if the list contains the MapAttribute; false otherwise.</returns>
+    internal static bool HasMapAttribute(
+        IEnumerable<INamedTypeSymbol> attributeSymbols)
+    {
+        return attributeSymbols.Any(x =>
+            x.OriginalDefinition.ContainingNamespace.Name == MapAttributeNamespace &&
+            x.Name == MapAttributeMetadataName
+        );
     }
 
     /// <summary>Returns the DtoAttribute type.

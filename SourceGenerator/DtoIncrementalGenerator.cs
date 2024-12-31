@@ -19,7 +19,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is ClassDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((ClassDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
-            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
+            .Where(static clsInfo =>
+                clsInfo.SemanticModel.HasDtoAttribute(GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node))
+            );
 
         var recordSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -27,7 +29,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
-            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
+            .Where(static recInfo =>
+                recInfo.SemanticModel.HasDtoAttribute(GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node))
+            );
 
         var mapSyntaxProvider = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -35,7 +39,9 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     node is RecordDeclarationSyntax { AttributeLists.Count: >= 1 }
                     && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedMapAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
-            .Where(static sm => sm.Node is not null); // Filtering for null Nodes is probably not necessary.
+            .Where(static recInfo =>
+                ModelExtensions.HasMapAttribute(GetAttributeSymbols(recInfo.SemanticModel, recInfo.Node))
+            );
 
         context.RegisterSourceOutput(classSyntaxProvider,
             static (spc, syntax) => ExecuteDtoClass(spc, syntax.SemanticModel, syntax.Node));
@@ -45,13 +51,8 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
             static (spc, syntax) => ExecuteMapRecord((spc, syntax.SemanticModel), syntax.Node));
     }
 
-    private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel model, ClassDeclarationSyntax syntax)
+    private static void ExecuteDtoClass(SourceProductionContext spc, SemanticModel _, ClassDeclarationSyntax syntax)
     {
-        // Bail early if we are not interested.
-        var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (model.HasGetDtoAttribute(attributeSymbols) == false)
-            return;
-
         var dtoSources = SourceCodeBuilderDto.BuildDtoClass(spc, syntax);
 
         var sourceCode = CreateSourceCode(dtoSources);
@@ -61,11 +62,6 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
 
     private static void ExecuteDtoRecord(SourceProductionContext spc,SemanticModel model, RecordDeclarationSyntax syntax)
     {
-        // Bail early if we are not interested.
-        var attributeSymbols = GetAttributeSymbols(model, syntax);
-        if (model.HasGetDtoAttribute(attributeSymbols) == false)
-            return;
-
         var dtoSources = SourceCodeBuilderDto.BuildDtoRecord(spc, syntax);
 
         var sourceCode = CreateSourceCode(dtoSources);
