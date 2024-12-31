@@ -4,12 +4,6 @@ namespace SourceGenerator;
 
 internal static class NamedTypeSymbolExtensions
 {
-    private const string DtoAttributeNamespace = "MyInterface";
-    private const string DtoAttributeMetadataName = "DtoAttribute";
-
-    private const string MapAttributeNamespace = "MyInterface";
-    private const string MapAttributeMetadataName = "MapAttribute";
-
     /// <summary>Returns if the item is a DtoAttribute somewhere.
     /// </summary>
     /// <param name="attributeSymbol"></param>
@@ -17,8 +11,8 @@ internal static class NamedTypeSymbolExtensions
     internal static bool IsDtoAttribute(this INamedTypeSymbol attributeSymbol)
     {
         return
-            attributeSymbol.OriginalDefinition.ContainingNamespace.Name == DtoAttributeNamespace &&
-            attributeSymbol.Name == DtoAttributeMetadataName;
+            attributeSymbol.OriginalDefinition.ContainingNamespace.Name == Constants.DtoAttributeNamespace &&
+            attributeSymbol.Name == Constants.DtoAttributeMetadataName;
     }
 
     /// <summary>Returns if the item is a MapAttribute.
@@ -28,7 +22,7 @@ internal static class NamedTypeSymbolExtensions
     internal static bool IsMapAttribute(this INamedTypeSymbol attributeSymbol)
     {
         return
-            attributeSymbol.OriginalDefinition.ContainingNamespace.Name == MapAttributeNamespace &&
-            attributeSymbol.Name == MapAttributeMetadataName;
+            attributeSymbol.OriginalDefinition.ContainingNamespace.Name == Constants.MapAttributeNamespace &&
+            attributeSymbol.Name == Constants.MapAttributeMetadataName;
     }
 }
