@@ -20,7 +20,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     && ((ClassDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (ClassDeclarationSyntax)ctx.Node))
             .Where(static clsInfo =>
-                clsInfo.SemanticModel.HasDtoAttribute(GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node))
+                ModelExtensions.HasDtoAttribute(GetAttributeSymbols(clsInfo.SemanticModel, clsInfo.Node))
             );
 
         var recordSyntaxProvider = context.SyntaxProvider
@@ -30,7 +30,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                     && ((RecordDeclarationSyntax)node).AttributeLists.HasSimplifiedDtoAttribute(),
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
             .Where(static recInfo =>
-                recInfo.SemanticModel.HasDtoAttribute(GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node))
+                ModelExtensions.HasDtoAttribute(GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node))
             );
 
         var mapSyntaxProvider = context.SyntaxProvider
