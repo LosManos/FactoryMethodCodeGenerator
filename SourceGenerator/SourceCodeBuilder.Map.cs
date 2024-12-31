@@ -200,7 +200,7 @@ internal static class SourceCodeBuilderMap
 
     private static StatementSyntax CreateCopyCommentComment(IEnumerable<string> targetPropertyNames)
     {
-        return CreateComment($"From Target we are copying fields [{string.Join(", ", targetPropertyNames)}].");
+        return CreateComment($"From Target, we are copying fields [{string.Join(", ", targetPropertyNames)}].");
     }
 
     private static StatementSyntax CreateComment(string commentText)
