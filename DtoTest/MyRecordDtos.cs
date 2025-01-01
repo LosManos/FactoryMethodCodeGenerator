@@ -1,5 +1,7 @@
 using MyInterface;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable ClassNeverInstantiated
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
