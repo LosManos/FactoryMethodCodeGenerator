@@ -52,4 +52,21 @@ public class RecordTest
         var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
         createMethod.Should().BeNull();
     }
+
+    [Fact]
+    public void AttributeMetaname()
+    {
+        _ = MyRecordDto_With_Metaname.Create(1);
+        // If it compiles it works.
+    }
+
+    /// <summary>A record/class without the correct attribute should not be manipulated.
+    /// </summary>
+    [Fact]
+    public void Only_manipulate_WHEN_correct_attribute()
+    {
+        var sut = typeof(MyRecordDto_With_Another_Namespace);
+        var createMethod = sut.GetMethods().FirstOrDefault(method => method.Name == "Create");
+        createMethod.Should().BeNull();
+    }
 }

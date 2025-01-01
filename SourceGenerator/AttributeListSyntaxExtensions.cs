@@ -50,7 +50,9 @@ static class AttributeListSyntaxExtensions
         // as there can be many attributes with said name. Feel free to make a more clever solution.
         var hasDtoAttribute = me
             .SelectMany(x => x.Attributes)
-            .Any(a => (a.Name as IdentifierNameSyntax)?.Identifier.Text == Constants.SimplifiedDtoAttributeName);
+            .Any(a =>
+                (a.Name as IdentifierNameSyntax)?.Identifier.Text == Constants.SimplifiedDtoAttributeName
+                || (a.Name as IdentifierNameSyntax)?.Identifier.Text == Constants.DtoAttributeMetadataName);
         return hasDtoAttribute;
     }
 
@@ -77,7 +79,9 @@ static class AttributeListSyntaxExtensions
         // as there can be many attributes with said name. Feel free to make a more clever solution.
         var hasMapAttribute = me
             .SelectMany(x => x.Attributes)
-            .Any(a => (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.SimplifiedMapAttributeName);
+            .Any(a =>
+                (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.SimplifiedMapAttributeName
+                || (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.MapAttributeMetadataName);
         return hasMapAttribute;
     }
 
@@ -99,7 +103,9 @@ static class AttributeListSyntaxExtensions
         // We use a string to compare against and that is a recipe for disaster
         // as there can be many attributes with said name. Feel free to make a more clever solution.
         return attributes
-            .Where(a => (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.SimplifiedMapAttributeName);
+            .Where(a =>
+                (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.SimplifiedMapAttributeName
+                || (a.Name as GenericNameSyntax)?.Identifier.Text == Constants.MapAttributeMetadataName);
     }
 
     /// <summary>Gets all Map attributes for a list of attributes.

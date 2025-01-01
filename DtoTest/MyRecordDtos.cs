@@ -1,5 +1,7 @@
 using MyInterface;
 
+// ReSharper disable PartialTypeWithSinglePart
+// ReSharper disable ClassNeverInstantiated
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -33,9 +35,28 @@ public partial record MyRecordDto_With_ExplicitPrivateConstructor
 
 public record NotARecordDto;
 
+/// <summary>This class should keep its Attribute suffix as it is the naming we test.
+/// </summary>
+// ReSharper disable once RedundantAttributeSuffix
+[DtoAttribute]
+public partial record MyRecordDto_With_Metaname
+{
+    public int MyFirstValue { get; init; }
+}
+
 /// <summary>Should not get a factory method.
 /// If it does - the code will not compile as the record is not partial.
 /// Alas important it is not partial.
 /// </summary>
 [Serializable]
 public record MyRecord_Without_DtoAttribute;
+
+/// <summary>This class/record shows every sign of being a DTO but does not refer to the correct attribute.
+/// </summary>
+[AnotherInterface.Dto]
+public partial record MyRecordDto_With_Another_Namespace
+{
+    /// <summary>We have a property, albeit unused, because we want to look like a real DTO in every aspect.
+    /// </summary>
+    public int AnyValue { get; init; }
+}

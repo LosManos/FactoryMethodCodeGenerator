@@ -33,9 +33,28 @@ public partial class MyClassDto_With_ExplicitPrivateConstructor
 
 public class NotAClassDto;
 
+/// <summary>This class should keep its Attribute suffix as it is the naming we test.
+/// </summary>
+// ReSharper disable once RedundantAttributeSuffix
+[DtoAttribute]
+public partial class MyClassDto_With_Metaname
+{
+    public int MyFirstValue { get; init; }
+}
+
 /// <summary>Should not get a factory method.
 /// If it does - the code will not compile as the class is not partial.
 /// Alas important it is not partial.
 /// </summary>
 [Serializable]
 public class MyClass_Without_DtoAttribute;
+
+/// <summary>This class/record shows every sign of being a DTO but does not refer to the correct attribute.
+/// </summary>
+[AnotherInterface.Dto]
+public partial class MyClassDto_With_Another_Namespace
+{
+    /// <summary>We have a property, albeit unused, because we want to look like a real DTO in every aspect.
+    /// </summary>
+    public int AnyValue { get; init; }
+}

@@ -32,7 +32,7 @@ public class DtoIncrementalGenerator : IIncrementalGenerator
                 transform: (ctx, _) => (SemanticModel: ctx.SemanticModel, Node: (RecordDeclarationSyntax)ctx.Node))
             // In the CreateSyntaxProvider we only have a Node, but we also need the model to figure out meta name and namespace. Hence, we have to add a where-filter.
             .Where(static recInfo =>
-                GetAttributeSymbols( recInfo.SemanticModel, recInfo.Node).Any(x => x.IsDtoAttribute())
+                GetAttributeSymbols(recInfo.SemanticModel, recInfo.Node).Any(x => x.IsDtoAttribute())
             );
 
         var mapSyntaxProvider = context.SyntaxProvider

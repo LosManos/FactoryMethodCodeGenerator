@@ -41,14 +41,29 @@ public class ClassTest
         // If it compiles it works.
     }
 
-    /// <summary>
-    ///  A record/class without the attibute should not be manipulated.
+    /// <summary>A record/class without the correct attribute should not be manipulated.
     /// </summary>
     [Theory]
-    [InlineData(typeof(NotAClassDto))]
-    public void Only_manipulate_WHEN_correct_tag(Type withoutDtoAttribute)
+    [InlineData(typeof(MyClassDto_With_DifferentTypes), true,
+        "Succeeds in being a mapper class. For checking the test works.")]
+    [InlineData(typeof(NotAClassDto), false,
+        "No attribute at all should not create a mapping class.")]
+    [InlineData(typeof(MyClassDto_With_Another_Namespace), false,
+        "Wrong MapAttribute, e.g. coming from another dependency does not render a mapping class.")]
+    public void Only_manipulate_WHEN_correct_tag(Type sut, bool expectedShouldBeManipulated, string reason)
     {
-        var createMethod = withoutDtoAttribute.GetMethods().FirstOrDefault(method => method.Name == "Create");
-        createMethod.Should().BeNull();
+        // The static constructor "Create" should always be present for a valid Dto.
+        const string methodName = "Create";
+        var createMethod = sut.GetMethods().FirstOrDefault(method => method.Name == methodName);
+
+        //  Assert.
+        (createMethod is not null).Should().Be(expectedShouldBeManipulated, reason);
+    }
+
+    [Fact]
+    public void AttributeMetaname()
+    {
+        _ = MyClassDto_With_Metaname.Create(1);
+        // If it compiles it works.
     }
 }
