@@ -23,19 +23,19 @@ internal static class SourceCodeBuilderMap
     {
         var namespaceName = SyntaxHelper.GetNameSpaceName(syntax);
         // The name of the record containing the mapping methods.
-        // E.g.: `public abstract partial record Mapping` where this is "Mapping".
+        // E.g.: `public abstract partial record Mapping` where `recordName` would be "Mapping".
         var recordName = SyntaxHelper.GetRecordNameString(syntax);
         var mappingInfo = GetMappingInformation(recordName, syntax.AttributeLists.GetSimplifiedMapAttributes());
 
         // The name of the parameter for the mapping function.
         // E.g.: `Source_To_Target(Source source)` where this is "source".
-        var mapFunctionSourceParameterName = "source";
+        const string mapFunctionSourceParameterName = "source";
 
         var methods = mappingInfo.Infos
             .Select(attrib =>
                 {
                     var attributeName = attrib.SourceType?.FirstAncestorOrSelf<AttributeSyntax>()?.Name
-                                        ?? throw new Exception("Could not find the target attribute.");
+                        ?? throw new Exception("Could not find the target attribute.");
 
                     if (attributeName is GenericNameSyntax genericNameSyntax)
                     {
@@ -49,7 +49,7 @@ internal static class SourceCodeBuilderMap
                             mapFunctionSourceParameterName);
                     }
 
-                    throw new Exception("Something went wrong when trying to find the argument for target.");
+                    throw new Exception($"Error in {nameof(BuildMapRecord)}. Something went wrong when trying to find the argument for target.");
                 }
             );
 
@@ -94,16 +94,16 @@ internal static class SourceCodeBuilderMap
     {
         var mapAttributes = attributes.GetSimplifiedMapAttributes()
             .Select(a => (
-                // Name of the attribute. Something line `Map<SourceType,TargetType>`.
+                // Name of the attribute. Something like `Map<SourceType,TargetType>`.
                 sourceTypeName: GetMappingSourceTypeName(a.Name),
                 targetTypeName: GetMappingTargetTypeName(a.Name),
-                sourceType: a.ArgumentList?.Arguments.Skip(1).First())
+                sourceType: GetMappingTargetType(a))
             );
 
         return MappingInfos.Create(
             recordName,
             mapAttributes.Select(ma => MappingInfo.Create(
-                "", // TODO:OF:What is this?
+                "", // TODO:OF:This is the method's name. Either use it or get rid of it.
                 ma.sourceTypeName,
                 ma.targetTypeName,
                 ma.sourceType)));
@@ -258,6 +258,9 @@ internal static class SourceCodeBuilderMap
         return memberAccessArgumentsList;
     }
 
+    /// <summary>Returns the name of A or C (cannot remember which) from
+    /// `[MapAttribute&lt;A, B&gt;(typeof(C), typeof(D))]`
+    /// </summary>
     private static string GetMappingSourceTypeName(NameSyntax ns)
     {
         var gns = (ns as GenericNameSyntax);
@@ -266,6 +269,20 @@ internal static class SourceCodeBuilderMap
         return ins ?? throw new Exception($"Error in {nameof(GetMappingSourceTypeName)}.");
     }
 
+    /// <summary>Returns the argument type B or D (cannot remember which) from
+    /// `[MapAttribute&lt;A, B&gt;(typeof(C), typeof(D))]`
+    /// </summary>
+    /// <param name="a"></param>
+    /// <returns></returns>
+    private static AttributeArgumentSyntax GetMappingTargetType(AttributeSyntax a)
+    {
+        return a.ArgumentList?.Arguments[1]
+            ?? throw new Exception($"Error in {nameof(GetMappingTargetType)}.");
+    }
+
+    /// <summary>Returns the name of B or D (cannot remember which) from
+    /// `[MapAttribute&lt;A, B&gt;(typeof(C), typeof(D))]`
+    /// </summary>
     private static string GetMappingTargetTypeName(NameSyntax ns)
     {
         var gns = (ns as GenericNameSyntax);
